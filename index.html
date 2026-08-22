@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NC-World · Native Causal World Model — Video Demos</title>
+<style>
+  :root{--bg:#101418;--panel:#1A2026;--edge:#242C34;--tx:#E8EDF2;--mut:#8A97A3;--acc:#4FC3A1;--warn:#D9A441}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{background:var(--bg);color:var(--tx);margin:0;padding:0 20px 72px;
+    font:16px/1.65 "Avenir Next","Helvetica Neue",system-ui,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding:52px 0 14px;border-bottom:1px solid var(--edge)}
+  h1{font-size:30px;font-weight:600;margin:0 0 8px;text-wrap:balance}
+  h1 em{color:var(--acc);font-style:normal}
+  .sub{color:var(--mut);max-width:70ch;margin:0 0 14px}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+  nav a{color:var(--acc);text-decoration:none;font-size:13px;border:1px solid var(--edge);
+    border-radius:999px;padding:5px 12px;background:var(--panel)}
+  nav a:hover{border-color:var(--acc)}
+  nav a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
+  .caveat{display:flex;gap:10px;align-items:baseline;background:var(--panel);
+    border-left:3px solid var(--warn);padding:10px 14px;margin:22px 0 8px;
+    color:var(--mut);font-size:14px;border-radius:0 6px 6px 0}
+  .caveat b{color:var(--warn);font-weight:600;letter-spacing:.04em;font-size:12px}
+  section{margin-top:44px}
+  .dom{color:var(--acc);text-transform:uppercase;font-size:12px;letter-spacing:.14em;font-weight:600}
+  section>h2{font-size:20px;font-weight:600;margin:4px 0 6px;text-wrap:balance}
+  section>p{color:var(--mut);font-size:14.5px;max-width:74ch;margin:0 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .take{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px}
+  .take video{width:100%;display:block;border-radius:6px;background:#000}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .lab{font:600 10px/1 "SF Mono","Cascadia Code",Consolas,monospace;
+    letter-spacing:.1em;color:var(--mut);margin:6px 0 4px;text-transform:uppercase}
+  .lab.gen{color:var(--acc)}
+  .bar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  button{background:var(--acc);color:#0B1210;border:0;border-radius:6px;
+    padding:6px 14px;font:600 12.5px "Avenir Next",system-ui,sans-serif;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
+  .chip{font:11.5px "SF Mono","Cascadia Code",Consolas,monospace;
+    font-variant-numeric:tabular-nums;color:var(--mut);background:var(--bg);
+    border:1px solid var(--edge);border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .chip b{color:var(--tx);font-weight:600}
+  footer{color:var(--mut);font-size:13px;border-top:1px solid var(--edge);
+    margin-top:56px;padding-top:16px;max-width:76ch}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>NC-World：<em>原生因果世界模型</em>实际生成的视频</h1>
+  <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左边是 held-out 真实视频（模型没见过这条轨迹），右边是模型仅凭第一帧 + 动作/文本条件流式生成的续写。全部为验证集轨迹，非训练样本。</p>
+  <nav>
+    <a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
+  </nav>
+  <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟 ~0.2 s（双向模型此项为 5.6 s）。</span></div>
+</header>
+<section id="libero">
+  <div class="dom">LIBERO · 仿真 Franka · 512² 上采样 · libero_s1@20k</div>
+  <h2>全项目最强的域：机械臂全程锐利刚体，超实时生成</h2>
+  <p>域均值 PSNR 37.07 / SSIM 0.983 / LPIPS 0.013 / FVD 97（25 帧，48 条 held-out）。这是全项目唯一一个模型误差不比 VAE 编解码器更向运动区集中的域——核心失效 B1 在此缺席。人眼检查确认无涂抹。</p>
+  <div class="grid" data-dom="libero" data-n="4" data-psnr="38.73,38.97,37.15,37.26"></div>
+</section>
+<section id="langtable">
+  <div class="dom">LangTable · 桌面推块 · langtable hires</div>
+  <h2>第二强的域：多物体交互下的稳定跟踪</h2>
+  <p>域最佳 PSNR 28.73 / LPIPS 0.039 / FVD 106.7（25 帧，100 条）。桌面多物体场景，动作条件推块。</p>
+  <div class="grid" data-dom="langtable" data-n="3" data-psnr="域均,域均,域均"></div>
+</section>
+<section id="bridge">
+  <div class="dom">Bridge/DROID · 真实机器人录像 · eqf_ft@24k</div>
+  <h2>真实域，诚实展示：背景稳，运动处仍是主要失效</h2>
+  <p>域最佳 PSNR 26.37 / FVD 142（25 帧，100 条）；此处展示的 EqF 微调臂 24.81。真实视频难得多：静止背景保持很好，但快速运动处出现涂抹、被操作物体退化——即我们诊断的 B1（条件均值坍缩），当前 Equilibrium Forcing 主线攻的方向。只放最好的域会误导，这一节必须在。</p>
+  <div class="grid" data-dom="bridge_eqf" data-n="3" data-psnr="24.57,22.67,25.59"></div>
+</section>
+<section id="rt1">
+  <div class="dom">RT-1 · Google 机器人 · rt1_s1</div>
+  <h2>第四个域：跨本体验证</h2>
+  <p>域最佳 PSNR 25.55（25 帧，100 条）。不同机械臂、不同相机、不同动作空间下同一套代码与超参。</p>
+  <div class="grid" data-dom="rt1" data-n="3" data-psnr="域均,域均,域均"></div>
+</section>
+<section id="wan5b">
+  <div class="dom">Bridge · Wan2.2-TI2V-5B 预训练骨干 · wan_bridge_s1@10k</div>
+  <h2>5B 预训练初始化：运动区 +3.3 dB 的最大单一杠杆</h2>
+  <p>把骨干换成 Wan2.2-TI2V-5B 预训练权重（825/825 权重全部匹配加载），相对从零训练把运动区 PSNR 提高 3.32 dB、静止区 4.82 dB——分区拆解后的全项目最大单一改进。</p>
+  <div class="grid" data-dom="wan5b" data-n="2" data-psnr="24.34,24.34"></div>
+</section>
+<section id="general">
+  <div class="dom">通用视频 · 文本条件 Track B · trackb@81帧</div>
+  <h2>同一架构的通用视频线：文本条件流式生成</h2>
+  <p>非机器人分支：同一 block-causal 架构在通用视频语料上以文本为条件流式生成 81 帧。质量尚在早期（这条线的主要用途是 Physics-IQ 等开放域评测的载体），如实展示。</p>
+  <div class="grid" data-dom="general" data-idx="3,6,12,15" data-psnr="21.6,21.2,16.6,19.4"
+       data-caps="手部特写|湖面日落与渡轮|雪中步行的大人与孩子|红橙色兰花簇"></div>
+</section>
+<footer>
+  数据集：DROID/Bridge、LIBERO、LangTable、RT-1、通用视频语料。全部指标为 held-out 轨迹上的逐 clip 配对协议；出处见仓库
+  <a href="https://github.com/lixuan27/NC-World-demo">NC-World-demo</a>。生成为流式（逐 chunk commit 进 rolling KV cache），支持 fork/resume 与在线重规划——这是双向视频模型没有的能力。对照双向 baseline（同代码同参、81 帧）：因果 21.47 dB / FVD 230 / 8.0 fps vs 双向 17.73 dB / FVD 1087 / 3.7 fps。
+</footer>
+</div>
+<script>
+function makeTake(dom,i,psnr,cap){
+  const d=document.createElement('div');d.className='take';
+  d.innerHTML='<div class="duo">'
+   +'<div><video src="videos/'+dom+'/gt_'+i+'.mp4" loop muted playsinline></video><div class="lab">Ground truth</div></div>'
+   +'<div><video src="videos/'+dom+'/pred_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">Generated</div></div></div>'
+   +'<div class="bar"><button>▶ 同步播放</button>'
+   +(psnr&&psnr!=="域均"?'<span class="chip">PSNR <b>'+psnr+'</b> dB</span>':'')
+   +(cap?'<span class="chip">'+cap+'</span>':'')+'</div>';
+  const vids=d.querySelectorAll('video'),b=d.querySelector('button');
+  b.onclick=()=>{const paused=vids[0].paused;
+    vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
+    b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
+  return d;}
+document.querySelectorAll('.grid').forEach(g=>{
+  const dom=g.dataset.dom,ps=(g.dataset.psnr||'').split(','),
+        caps=(g.dataset.caps||'').split('|'),
+        idx=g.dataset.idx?g.dataset.idx.split(','):
+            Array.from({length:+g.dataset.n},(_,i)=>i);
+  idx.forEach((i,k)=>g.appendChild(makeTake(dom,i,ps[k],caps[k]||'')));});
+</script>
+</body>
+</html>
