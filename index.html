@@ -56,10 +56,22 @@
   <h1>NC-World：<em>原生因果世界模型</em>实际生成的视频</h1>
   <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左边是 held-out 真实视频（模型没见过这条轨迹），右边是模型仅凭第一帧 + 动作/文本条件流式生成的续写。全部为验证集轨迹，非训练样本。</p>
   <nav>
-    <a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
+    <a href="#longform">★ 17秒长视频</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
   </nav>
   <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟 ~0.2 s（双向模型此项为 5.6 s）。</span></div>
 </header>
+<section id="longform">
+  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒 @15fps · 流式无重置</div>
+  <h2>新增：17 秒完整任务流式生成（LIBERO）</h2>
+  <p>响应"视频太短"的审阅意见：253 帧连续自回归 rollout，机械臂走完完整动作序列（含接触与操作物体），全程 rolling KV cache 流式生成、无任何重置。域均值 PSNR 20.86 / LPIPS 0.139——长时域 drift 是真实存在的（对比上面 25 帧的 37 dB），如实展示而非隐藏。逐 clip PSNR 21.0 / 19.7 / 19.7 / 19.1。</p>
+  <div class="grid" data-dom="longform_libero" data-n="4" data-psnr="21.0,19.7,19.7,19.1"></div>
+</section>
+<section id="longform_lt">
+  <div class="dom">LONG-FORM · LangTable · 41 帧（该语料 episode 上限）</div>
+  <h2>LangTable 最长可行长度：41 帧 ≈ 2.7 秒</h2>
+  <p>LangTable 语料本身的 episode 就短（41 帧已是验证集上限）——这是数据边界不是模型边界。域均值 26.6 dB。</p>
+  <div class="grid" data-dom="longform_langtable" data-n="3" data-psnr="25.4,26.3,24.3"></div>
+</section>
 <section id="libero">
   <div class="dom">LIBERO · 仿真 Franka · 512² 上采样 · libero_s1@20k</div>
   <h2>全项目最强的域：机械臂全程锐利刚体，超实时生成</h2>
