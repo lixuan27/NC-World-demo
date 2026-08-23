@@ -56,10 +56,16 @@
   <h1>NC-World：<em>原生因果世界模型</em>实际生成的视频</h1>
   <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左边是 held-out 真实视频（模型没见过这条轨迹），右边是模型仅凭第一帧 + 动作/文本条件流式生成的续写。全部为验证集轨迹，非训练样本。</p>
   <nav>
-    <a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
+    <a href="#board">★ 结果板</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
   </nav>
   <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟 ~0.2 s（双向模型此项为 5.6 s）。</span></div>
 </header>
+<section id="board">
+  <div class="dom">RESULTS BOARD · 2026-08-24 更新 · 判决潮进行中</div>
+  <h2>结果板：绝对指标与判决（持续更新）</h2>
+  <p><b>受控双向对比</b>（同代码、同参数、同 100 clip、同 81 帧，只换采样器）：因果 <b>PSNR 21.47 / SSIM 0.819 / LPIPS 0.110 / FVD 229.5 / 8.0 fps</b>，双向 baseline 17.73 / 0.644 / 0.240 / FVD 1087 / 3.7 fps——四项全胜；且因果侧当时在 6–25× 采样预算劣势下取胜（残差夹子的新发现），结论只会更保守。<b>长时程流式</b>四域全部快于实时：DROID 真机 253 帧 (16.9s) 19.78 dB @21.6 fps、LIBERO 253 帧 20.86 dB @57.9 fps、Bridge 77 帧 23.50 dB、LangTable 41 帧 26.60 dB。<b>因果独有能力</b>：在线重规划省算 73.7/37.6/35.6%（三种分叉点）且输出与全量重算逐位相同（bit-exact 16/16）；首帧延迟 ~0.2 s（双向 5.6 s）；动作→画面结构延迟地板 533 ms（生产 chunk 配置，独立于吞吐的第二事实）。</p>
+  <p><b>方法学判决（2026-08-24）</b>：Equilibrium Forcing（去掉噪声水平输入）最终判决为"训练中程瞬态优势、6 万步收敛处归零"（中程 +0.22~0.24 dB t=2.58 → 收敛 ±0.00，肉眼不可区分）——作为目标函数侧干预的又一个干净阴性，它转而支持"运动区糊化（B1）相当部分住在采样侧"的假说。正在跑的 residence 阶梯（有效去噪步数 2→4→8 单变量扫）是该假说的判决实验，同批还有 CFG 二维扫、采样几何因子分解对、DMD2 加噪判别头冒烟、方向匹配臂与 Physics-IQ 官方打分。扩量训练（LIBERO 100k / LangTable 120k / Bridge 100k / Track-B 150k 步，全带抗漂移课程）正在推进，收官后本页全部 demo 将以新 checkpoint 重制。</p>
+</section>
 <section id="longform_droid">
   <div class="dom">LONG-FORM · DROID 真实机器人 · 253 帧 ≈ 17 秒 @15fps · ssv2_droid_s1@20k</div>
   <h2>新增：真实机器人 17 秒流式生成——且生成快于实时（21.6 fps）</h2>
@@ -101,6 +107,13 @@
   <h2>真实域，诚实展示：背景稳，运动处仍是主要失效</h2>
   <p>域最佳 PSNR 26.37 / FVD 142（25 帧，100 条）；此处展示的 EqF 微调臂 24.81。真实视频难得多：静止背景保持很好，但快速运动处出现涂抹、被操作物体退化——即我们诊断的 B1（条件均值坍缩），当前 Equilibrium Forcing 主线攻的方向。只放最好的域会误导，这一节必须在。</p>
   <div class="grid" data-dom="bridge_eqf" data-n="3" data-psnr="24.57,22.67,25.59"></div>
+</section>
+<section id="ft60k">
+  <div class="dom">BRIDGE 真实机器人 · ft@60k 收敛 checkpoint · f25 · 域均 PSNR 24.6</div>
+  <h2>新增：6 万步收敛点的生成质量（判决所用 checkpoint）</h2>
+  <p>今日 EqF 60k 判决所用的收敛 checkpoint 实际生成效果。相比 3 万步从零臂，物体身份（罐子、系绳）保持明显更久；运动收尾处仍可见运动区糊化——这正是当前判决潮（采样预算阶梯）要归因的对象，如实展示。</p>
+  <div class="grid" data-dom="ft60k" data-idx="0,2,4" data-psnr="域均,域均,域均"
+       data-caps="夹爪抓罐并倾倒|多物体桌面操作|机械臂接近目标"></div>
 </section>
 <section id="rt1">
   <div class="dom">RT-1 · Google 机器人 · rt1_s1</div>
