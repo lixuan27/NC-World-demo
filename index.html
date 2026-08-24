@@ -58,7 +58,7 @@
   <nav>
     <a href="#board">★ 结果板</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
   </nav>
-  <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟 ~0.2 s（双向模型此项为 5.6 s）。</span></div>
+  <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟实测 0.188 s（真实机器人域、生产配置；双向模型此项为 5.6 s）。</span></div>
 </header>
 <section id="board">
   <div class="dom">RESULTS BOARD · 2026-08-24 更新 · 判决潮进行中</div>
@@ -70,7 +70,7 @@
 <section id="longform_droid">
   <div class="dom">LONG-FORM · DROID 真实机器人 · 253 帧 ≈ 17 秒 @15fps · ssv2_droid_s1@20k</div>
   <h2>新增：真实机器人 17 秒流式生成——且生成快于实时（21.6 fps）</h2>
-  <p>响应"至少 15 秒"的审阅意见：真实机器人录像上的 253 帧连续自回归 rollout，rolling KV cache 流式、无重置，生成吞吐 21.6 fps 高于 15 fps 内容速率。域均值 PSNR 19.78 / LPIPS 0.145，逐 clip 18.3 / 20.2 / 17.7 / 18.9——真实域长时域 drift 明显强于仿真域（对比 LIBERO 长视频的 20.9），如实展示。</p>
+  <p>响应"至少 15 秒"的审阅意见：真实机器人录像上的 253 帧连续自回归 rollout，rolling KV cache 流式、无重置。<b>吞吐更正（2026-08-25 步数对齐重测）</b>：本页视频生成于 6 步去噪配置（21.6 fps）；同一权重在生产 2 步配置下实测 <b>48.6 fps</b>（DiT-only 口径，内容速率 15 fps 的 3.2 倍）、<b>首帧延迟 0.188 秒</b>——此前与 LIBERO (57.9 fps @2步) 的表观 2.7× 域差，其中 2.25× 是去噪步数配置差而非域难度差；两步配置下 PSNR 持平（19.81 vs 19.78）。域均值 PSNR 19.78 / LPIPS 0.145，逐 clip 18.3 / 20.2 / 17.7 / 18.9——真实域长时域 drift 明显强于仿真域（对比 LIBERO 长视频的 20.9），如实展示。跨域吞吐比较现在一律标注去噪步数（effective_steps），不同步数不并比。</p>
   <div class="grid" data-dom="longform_droid" data-n="4" data-psnr="18.3,20.2,17.7,18.9"></div>
 </section>
 <section id="longform_bridge">
