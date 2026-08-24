@@ -56,7 +56,7 @@
   <h1>NC-World：<em>原生因果世界模型</em>实际生成的视频</h1>
   <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左边是 held-out 真实视频（模型没见过这条轨迹），右边是模型仅凭第一帧 + 动作/文本条件流式生成的续写。全部为验证集轨迹，非训练样本。</p>
   <nav>
-    <a href="#board">★ 结果板</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
+    <a href="#board">★ 结果板</a><a href="#frontier">★ 2步vs8步前沿</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
   </nav>
   <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟实测 0.188 s（真实机器人域、生产配置；双向模型此项为 5.6 s）。</span></div>
 </header>
@@ -135,6 +135,12 @@
   <div class="grid" data-dom="general" data-idx="3,6,12,15" data-psnr="21.6,21.2,16.6,19.4"
        data-caps="手部特写|湖面日落与渡轮|雪中步行的大人与孩子|红橙色兰花簇"></div>
 </section>
+<section id="frontier">
+  <div class="dom">NEW · 去噪深度前沿 · 同一权重 (Bridge 微调 60k) · 逐 clip 三方对比</div>
+  <h2>新增：去噪步数买到什么——2 步 vs 8 步，同一模型同一噪声</h2>
+  <p>这组对比展示当前主线（rollout 蒸馏）要压缩的对象。左：真实视频；中：生产 2 步去噪（学生的算力预算，FVD 345.4）；右：8 步+CFG（教师工作点，FVD 302.6）。差距 −42.8 FVD 主要表现为运动区域从雾状涂抹变成有承诺的清晰结构。关键测量：在这个训练充分的 60k checkpoint 上，8 步侧的逐样本机制指标（ρ_rollout 0.495 vs 2 步侧 0.535）差距已落在测量噪声内——感知与机制的对立在欠训练时严重、训练充分后基本消退。蒸馏实验（smoke3）正在进行：目标是让 2 步的学生直接命中 8 步教师的输出。</p>
+  <div class="grid3" data-fdom="frontier"></div>
+</section>
 <footer>
   数据集：DROID/Bridge、LIBERO、LangTable、RT-1、通用视频语料。全部指标为 held-out 轨迹上的逐 clip 配对协议；出处见仓库
   <a href="https://github.com/lixuan27/NC-World-demo">NC-World-demo</a>。生成为流式（逐 chunk commit 进 rolling KV cache），支持 fork/resume 与在线重规划——这是双向视频模型没有的能力。对照双向 baseline（同代码同参、81 帧）：因果 21.47 dB / FVD 230 / 8.0 fps vs 双向 17.73 dB / FVD 1087 / 3.7 fps。
@@ -154,6 +160,19 @@ function makeTake(dom,i,psnr,cap){
     vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
     b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
   return d;}
+document.querySelectorAll('.grid3').forEach(g=>{
+  ['0000','0001','0002'].forEach(i=>{
+    const d=document.createElement('div');d.className='take';
+    d.innerHTML='<div class="duo" style="grid-template-columns:1fr 1fr 1fr">'
+     +'<div><video src="videos/frontier/gt_'+i+'.mp4" loop muted playsinline></video><div class="lab">Ground truth</div></div>'
+     +'<div><video src="videos/frontier/r2_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">2 步 (生产/学生预算)</div></div>'
+     +'<div><video src="videos/frontier/r8_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">8 步+CFG (教师)</div></div></div>'
+     +'<div class="bar"><button>▶ 同步播放</button><span class="chip">同一权重 · 同一初始噪声</span></div>';
+    const vids=d.querySelectorAll('video'),b=d.querySelector('button');
+    b.onclick=()=>{const paused=vids[0].paused;
+      vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
+      b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
+    g.appendChild(d);});});
 document.querySelectorAll('.grid').forEach(g=>{
   const dom=g.dataset.dom,ps=(g.dataset.psnr||'').split(','),
         caps=(g.dataset.caps||'').split('|'),
