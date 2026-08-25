@@ -56,12 +56,12 @@
   <h1>NC-World：<em>原生因果世界模型</em>实际生成的视频</h1>
   <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左边是 held-out 真实视频（模型没见过这条轨迹），右边是模型仅凭第一帧 + 动作/文本条件流式生成的续写。全部为验证集轨迹，非训练样本。</p>
   <nav>
-    <a href="#board">★ 结果板</a><a href="#frontier">★ 2步vs8步前沿</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#general">通用视频 (文本条件)</a>
+    <a href="#board">★ 结果板</a><a href="#frontier">★ 2步vs8步前沿</a><a href="#longform_droid">★ 真实机器人17秒</a><a href="#longform">★ LIBERO 17秒</a><a href="#libero">LIBERO 仿真 · 38.7 dB</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge 真实机器人</a><a href="#rt1">RT-1</a><a href="#wan5b">5B 预训练骨干</a><a href="#scratch_ladder">★ 从零因果阶梯</a><a href="#lt_final">★ LangTable 终版</a><a href="#general">通用视频 (文本条件)</a>
   </nav>
   <div class="caveat"><b>播放速度</b><span>视频按逐帧检查速度（3–15 fps）导出，<u>不是</u>生成速度。LIBERO 域实测生成吞吐 63.5 fps @256×256，超实时；流式首帧延迟实测 0.188 s（真实机器人域、生产配置；双向模型此项为 5.6 s）。</span></div>
 </header>
 <section id="board">
-  <div class="dom">RESULTS BOARD · 2026-08-24 更新 · 判决潮进行中</div>
+  <div class="dom">RESULTS BOARD · 2026-08-26 更新 · dynamics 分解 + 从零阶梯 + VBench 地板判决</div>
   <h2>结果板：绝对指标与判决（持续更新）</h2>
   <p><b>受控双向对比</b>（同代码、同参数、同 100 clip、同 81 帧，只换采样器）：因果 <b>PSNR 21.47 / SSIM 0.819 / LPIPS 0.110 / FVD 229.5 / 8.0 fps</b>，双向 baseline 17.73 / 0.644 / 0.240 / FVD 1087 / 3.7 fps——四项全胜；且因果侧当时在 6–25× 采样预算劣势下取胜（残差夹子的新发现），结论只会更保守。<b>长时程流式</b>四域全部快于实时：DROID 真机 253 帧 (16.9s) 19.78 dB（页面视频为 6 步配置 @21.6 fps；生产 2 步配置实测 48.6 fps、PSNR 持平 19.81）、LIBERO 253 帧 20.86 dB @57.9 fps、Bridge 77 帧 23.50 dB、LangTable 41 帧 26.60 dB。<b>因果独有能力</b>：在线重规划省算 73.7/37.6/35.6%（三种分叉点）且输出与全量重算逐位相同（bit-exact 16/16）；首帧延迟 0.188 s 实测于真机域生产配置（双向 5.6 s）；动作→画面结构延迟地板 533 ms（生产 chunk 配置，独立于吞吐的第二事实）。</p>
   <p><b>头号外部结果：三个机器人数据集上的同数据并读（2026-08-25 完成）。</b>在 IRASim 官方发布的 Bridge-V2 / Language-Table / RT-1 验证集上（官方 split，与训练零重叠），用与已发表复现完全相同的度量实现（同一 I3D 权重、同一预处理约定——同名 FVD 跨实现可差 3-4 倍，所以实现必须对齐），8 帧动作条件续写、512 集、两个采样工作点，<b>每个数据集都附我们自己的 do-nothing 冻结地板</b>：</p>
@@ -76,6 +76,9 @@
   <p><b>新结果：训练算力 × 推理算力的二维面（2026-08-25）。</b>把同一条训练轨迹的 6 个检查点（跨 30 倍训练算力）× 4 档去噪深度全部测一遍，得到三条此前看不到的规律。<b>其一</b>：加深去噪会让模型的逐样本动态相关性下降——这个代价随预训练成熟<b>单调收缩约 6 倍</b>（0.070 → 0.011），而画质收益在每一个训练步都还在。也就是说，"画质与动态不可兼得"很大程度上是<b>欠训练现象</b>，不是这类模型的固有属性。<b>其二</b>：推理算力并非越多越好——最深的一档在<b>每一个</b>训练步上都比最浅的一档更差，最优位置稳定在中间，且不随训练移动。<b>其三</b>：训练买运动、加深去噪卖运动，二者在机器人域是方向相反的旋钮。</p>
 <p><b>一个自我更正，值得单独写出来。</b>我们原本把"教师配置比生产配置好 42.8 FVD"当作蒸馏项目的目标额度。按<b>实际前向次数</b>重新排开后（分类器自由引导会让每步前向翻倍）：2 次前向 345.4 / 4 次前向 302.3 / 16 次前向 302.6——<b>画质在 4 次前向就饱和了</b>，那 42.8 全部来自引导、加深去噪贡献为零。所以"把 16 次前向压进 2 次、8 倍压缩"的说法是错的；正确的问题是"<b>2 次前向的学生能否追回引导在 4 次前向买到的东西</b>"，目前实测追回 35%（345.4 → 330.3）且逐样本动态指标无损。需要限定的是：这个饱和是充分训练检查点的性质，在训练不足的模型上加深去噪仍然买到很多。</p>
 <p><b>Physics-IQ 四点标定（2026-08-25）：我们把自己最低的分数校准清楚了。</b>在这个物理理解基准上，把真值当作预测喂进打分器得 <b>100.0</b>（证明打分管线正常）；把条件末帧冻结成静止视频得 <b>21.0</b>；把我们自己的生成结果<b>打乱帧序</b>得 <b>1.0</b>；而本模型得 <b>1.06</b>——<b>落在随机运动的地板上</b>。按两地板可采性判据，这条轴是合格的（两个地板都远低于真值锚，真值领先），所以 1.06 是一个真实、可解释且严重的结果，不能用"欠训练"带过：<b>在域外物理场景上，本模型生成的运动所携带的物理对齐信号不超过随机帧序</b>。这是本项目 dynamics 侧最诚实的一句话，也是接下来的具体靶——先越过"什么都不做"的 21 分。附带一条关于该基准的观察：它把"不动"评得比"动错"高 20 倍，所以引用任何 Physics-IQ 分数（包括别人的）都应同时给出这两个地板。</p>
+<p><b>2026-08-26 大更新一：dynamics 拆成两个量，并造了两把能测它的尺子。</b>所有比值型运动指标（flow ratio、dynamic degree）把两件事压成一个数：<b>水平</b>（平均输出多少运动）与<b>响应度</b>（输出的量是否跟随<i>这一段</i>世界实际动了多少）。水平对、响应度为零的模型会向静止房间和飙车场面吐出等量运动——比值可以很体面，而它在机制上就是条件均值。两把非比值尺子：<b>e（跨速率弹性）</b>——同一批 clip、内容不变、只把观测位移放大 1.72×，本模型输出只放大 1.01–1.02×（e≈0.02，"忠实响应"被置信区间排除）；<b>b（跨场景斜率）</b>——动得多 10× 的场景，通用视频模型只多给 2.3×（b≈0.37）。用这两把尺子得到一个撤回与一个机制：<b>数据节奏干预（target_fps 归一化）只动水平（+0.43, t=2.4）、不动响应度（b 0.370→0.383）、且赔保真度（FVD +75.2）</b>——原"节奏归一化改善运动"的结论按预注册判据撤回；低响应度的机制是<b>差分收缩</b>（快场景被压得更狠），且与方向不确定性无关。<b>速度线性探针</b>（两个域的模型、闭式岭回归、打乱标签+亮度双对照）：观测速度在模型<b>每一层</b>都高度线性可解码（R² 0.86–0.905）而输出不用它 ⇒ 杠杆在<b>目标函数</b>一侧——第一个响应度干预（按 clip 中心化的运动重分配项，全局水平按构造不可动）已实现待训。</p>
+<p><b>2026-08-26 大更新二：一次 provenance 审计改写了因果阶梯，然后给出更干净的版本。</b>我们发现旧阶梯里的三条因果臂实为从预训练 checkpoint warm-start（CLI override 写入，config 文件里看不见——教训：<b>provenance 必须读 checkpoint 内嵌 config</b>），旧"8.9×"数字降级。<b>从零对从零的干净对照</b>（同批 clip、同步数 7500）：因果臂 FVD <b>700–858</b>、响应度 b <b>0.46–0.89</b>；双向+同质噪声 1566 / b 0.39；<b>双向+diffusion forcing 4454 / b −0.01</b>（其输出运动与场景运动完全无相关——条件均值的纯粹形态）。⇒ <b>因果注意力是 diffusion forcing 可用的前提（从零对从零 2–6× FVD），且带来明显更高的响应度</b>；预训练初始化把 FVD 再压 40%、b 推到 1.0 饱和（"预训练买响应度"的直接证据）；另发现 chunk 布局调制响应度（chunk4 &gt; chunk2+interval2 &gt; chunk1，与 FVD 不单调）。下方新增视频区可直接肉眼对比。</p>
+<p><b>2026-08-26 大更新三：VBench 九维经两地板法零可采；两条链走满全预算并刷新终版数字。</b>把冻结帧（do-nothing）与打乱帧序（random motion）作为地板送进 VBench 官方九维：<b>四维被冻结帧拿满分</b>（subject/background/flickering 1.0000/1.0002/1.0000，都超过真实视频；motion_smoothness 冻结 0.9983 &gt; 本模型 0.9886 &gt; 真值 0.9861——"比真实视频还平滑"是症状不是成绩），<b>五维被乱动追平或超过</b>（dynamic_degree 0.9950 vs 真值 0.615；文本对齐维度打乱帧序后分数逐位不变）。加上 WMB 与 WorldScore，三个 benchmark 的地板判决合成一条一般性主张：<b>现行视频世界模型评测的动态维度，或由不动最大化、或由乱动饱和</b>——这正是上面自造 e/b 尺子的存在理由。同时 LangTable 链走满 120k 全预算，终版重评三列同向改善（FVD 38.15→<b>37.97</b>，对 DriftWorld 39.09 赢面 2.4%→2.9%，数字钉上终版 checkpoint）；LIBERO 链走满 100k，绝对面板全指标改善且长时程受益更大（f49 PSNR +1.45 dB / FVD −5.6）。CHF（部署历史强制）判出域依赖性：机器人域有效、通用视频域按可采指标（FVD/LPIPS/FID）判负。</p>
 <p><b>方法学判决（2026-08-24）</b>：Equilibrium Forcing（去掉噪声水平输入）最终判决为"训练中程瞬态优势、6 万步收敛处归零"（中程 +0.22~0.24 dB t=2.58 → 收敛 ±0.00，肉眼不可区分）——作为目标函数侧干预的又一个干净阴性，它转而支持"运动区糊化（B1）相当部分住在采样侧"的假说。正在跑的 residence 阶梯（有效去噪步数 2→4→8 单变量扫）是该假说的判决实验，同批还有 CFG 二维扫、采样几何因子分解对、DMD2 加噪判别头冒烟、方向匹配臂与 Physics-IQ 官方打分。扩量训练（LIBERO 100k / LangTable 120k / Bridge 100k / Track-B 150k 步，全带抗漂移课程）正在推进，收官后本页全部 demo 将以新 checkpoint 重制。</p>
 </section>
 <section id="longform_droid">
@@ -139,6 +142,20 @@
   <p>把骨干换成 Wan2.2-TI2V-5B 预训练权重（825/825 权重全部匹配加载），相对从零训练把运动区 PSNR 提高 3.32 dB、静止区 4.82 dB——分区拆解后的全项目最大单一改进。</p>
   <div class="grid" data-dom="wan5b" data-n="2" data-psnr="24.34,24.34"></div>
 </section>
+<section id="scratch_ladder">
+  <div class="dom">NEW · 从零对从零的因果阶梯 · 同批 held-out clip · 各 7500 步 · 2026-08-26</div>
+  <h2>新增：为什么因果注意力是 diffusion forcing 的前提——肉眼版</h2>
+  <p>四列同一条 held-out 轨迹：真值 / <b>双向注意力 + diffusion forcing</b>（FVD 4454，输出运动与场景运动零相关）/ <b>因果注意力 + 同配方、从零 7500 步</b>（FVD 852，响应度 b 0.89）/ <b>因果 + 预训练初始化</b>（FVD 499，b 1.03）。中间两列是干净的从零对照——同数据、同步数、近同代码，只差注意力方向；最右列展示预训练初始化在此之上再买到什么。</p>
+  <div class="grid4s"></div>
+</section>
+
+<section id="lt_final">
+  <div class="dom">NEW · Language-Table 终版 checkpoint (120k, 全预算) · FVD 37.97 vs DriftWorld 39.09 · 2026-08-26</div>
+  <h2>新增：LangTable 走满 120k 全预算的终版生成</h2>
+  <p>该链是四条扩量链中第一条走满全预算的。终版重评（协议与此前逐字节相同，唯一变量是 checkpoint 步数）：LPIPS 0.0333 / FID 10.23 / <b>FVD 37.97</b>，三个可排名列全部优于中途 104k 版，对 DriftWorld 发表值 39.09 的赢面由 2.4% 扩至 2.9%。8 帧动作条件续写、官方验证 split。</p>
+  <div class="grid" data-dom="lt_final" data-n="2" data-idx="0000,0007" data-psnr="域均,域均"></div>
+</section>
+
 <section id="general">
   <div class="dom">通用视频 · 文本条件 Track B · trackb@81帧</div>
   <h2>同一架构的通用视频线：文本条件流式生成</h2>
@@ -179,6 +196,20 @@ document.querySelectorAll('.grid3').forEach(g=>{
      +'<div><video src="videos/frontier/r2_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">2 步 (生产/学生预算)</div></div>'
      +'<div><video src="videos/frontier/r8_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">8 步+CFG (教师)</div></div></div>'
      +'<div class="bar"><button>▶ 同步播放</button><span class="chip">同一权重 · 同一初始噪声</span></div>';
+    const vids=d.querySelectorAll('video'),b=d.querySelector('button');
+    b.onclick=()=>{const paused=vids[0].paused;
+      vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
+      b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
+    g.appendChild(d);});});
+document.querySelectorAll('.grid4s').forEach(g=>{
+  ['0003','0009'].forEach(i=>{
+    const d=document.createElement('div');d.className='take';
+    d.innerHTML='<div class="duo" style="grid-template-columns:1fr 1fr 1fr 1fr">'
+     +'<div><video src="videos/scratch_ladder/gt_'+i+'.mp4" loop muted playsinline></video><div class="lab">Ground truth</div></div>'
+     +'<div><video src="videos/scratch_ladder/bidirdf_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">双向+DF (从零) FVD 4454</div></div>'
+     +'<div><video src="videos/scratch_ladder/causal_scratch_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果 (从零) FVD 852</div></div>'
+     +'<div><video src="videos/scratch_ladder/causal_warm_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果+预训练 FVD 499</div></div></div>'
+     +'<div class="bar"><button>▶ 同步播放</button><span class="chip">同一 clip · 同一初始噪声</span></div>';
     const vids=d.querySelectorAll('video'),b=d.querySelector('button');
     b.onclick=()=>{const paused=vids[0].paused;
       vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
