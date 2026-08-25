@@ -73,12 +73,12 @@
   <p>IRASim 官方验证 split（与训练零重叠），8 帧动作条件续写、512 集、同一 I3D 权重与预处理约定（同名 FVD 跨实现可差 3–4 倍）。</p>
   <div class="scroll"><table>
     <tr><th>FVD ↓</th><th class="n">冻结地板</th><th class="n">本模型</th><th class="n">IRASim</th><th class="n">DriftWorld</th></tr>
-    <tr><td>Bridge-V2 <span class="chip">终版重评中</span></td><td class="n floor">238.7</td><td class="n win">40.4</td><td class="n">91.6</td><td class="n">101.2</td></tr>
+    <tr><td>Bridge-V2 <span class="chip">终版 100k</span></td><td class="n floor">238.7</td><td class="n win">45.08</td><td class="n">91.6</td><td class="n">101.2</td></tr>
     <tr><td>Language-Table <span class="chip">终版 120k</span></td><td class="n floor">167.3</td><td class="n win">37.97</td><td class="n">60.05</td><td class="n">39.09</td></tr>
     <tr><td>RT-1 <span class="chip">30k 终点</span></td><td class="n floor">459.5</td><td class="n">79.47</td><td class="n">93.0</td><td class="n win">68.72</td></tr>
     <tr><td>RT-1 <span class="chip">10k（该链最优点）</span></td><td class="n floor">—</td><td class="n">69.32</td><td class="n">—</td><td class="n">68.72</td></tr>
   </table></div>
-  <p class="note">RT-1 是唯一负格。收敛探针显示其 FVD 随训练<b>单调上升</b>（10k 69.32 → 20k 76.32 → 30k 79.47）而 LPIPS 持平——不是预算不足，是训练后期分布层面退化；10k 处与 DriftWorld 相差 0.9%。我们仍报训练终点的 79.47（不事后挑最优点），并把整条曲线一并列出。</p>
+  <p class="note">RT-1 是唯一负格。收敛探针显示其 FVD 随训练<b>单调上升</b>（10k 69.32 → 20k 76.32 → 30k 79.47）而 LPIPS 持平——不是预算不足，是训练后期分布层面退化；10k 处与 DriftWorld 相差 0.9%。我们仍报训练终点的 79.47（不事后挑最优点），并把整条曲线一并列出。Bridge 也同向（58k 40.42 → 100k 45.08）；按区间宽度归一后 RT-1 每万步 +7.3%、Bridge +2.7%，<b>同向但速率差 2.7 倍，不能当作同一现象</b>。四条链的窗口起点相差很大（LIBERO 从 20k 起、Bridge 从 58k 起），因此<b>不在可比训练阶段</b>，我们只报链内相对变化，不跨链比 FVD 绝对值（协议 clip 数不同）。</p>
 
   <h2 style="margin-top:26px">绝对面板与系统能力</h2>
   <div class="scroll"><table>
@@ -119,7 +119,7 @@
 </section>
 
 <section id="bridge">
-  <div class="dom">BRIDGE-V2 · 终版 100k 全预算 · 真实机器人</div>
+  <div class="dom">BRIDGE-V2 · 终版 100k 全预算 · FVD 45.08 · 真实机器人</div>
   <h2>真实域：背景稳定，运动区仍是主要失效</h2>
   <div class="grid" data-dom="bridge_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
 </section>
