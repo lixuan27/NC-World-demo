@@ -76,7 +76,7 @@
     <tr><td>Bridge-V2 <span class="chip">终版重评中</span></td><td class="n floor">238.7</td><td class="n win">40.4</td><td class="n">91.6</td><td class="n">101.2</td></tr>
     <tr><td>Language-Table <span class="chip">终版 120k</span></td><td class="n floor">167.3</td><td class="n win">37.97</td><td class="n">60.05</td><td class="n">39.09</td></tr>
     <tr><td>RT-1 <span class="chip">30k 终点</span></td><td class="n floor">459.5</td><td class="n">79.47</td><td class="n">93.0</td><td class="n win">68.72</td></tr>
-    <tr><td>RT-1 <span class="chip">10k</span></td><td class="n floor">—</td><td class="n">69.32</td><td class="n">—</td><td class="n">68.72</td></tr>
+    <tr><td>RT-1 <span class="chip">10k（该链最优点）</span></td><td class="n floor">—</td><td class="n">69.32</td><td class="n">—</td><td class="n">68.72</td></tr>
   </table></div>
   <p class="note">RT-1 是唯一负格。收敛探针显示其 FVD 随训练<b>单调上升</b>（10k 69.32 → 20k 76.32 → 30k 79.47）而 LPIPS 持平——不是预算不足，是训练后期分布层面退化；10k 处与 DriftWorld 相差 0.9%。我们仍报训练终点的 79.47（不事后挑最优点），并把整条曲线一并列出。</p>
 
@@ -125,9 +125,10 @@
 </section>
 
 <section id="general">
-  <div class="dom">通用视频 · 文本条件 · Track-B 当前 checkpoint</div>
+  <div class="dom">通用视频 · 文本条件 · Track-B 当前 checkpoint (46k / 150k)</div>
   <h2>同一架构的通用视频线</h2>
-  <div class="grid" data-dom="general_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
+  <p>唯一非机器人域，也是全项目运动保真度最低的域：产出运动量仅为真实的 0.32–0.34，而动作条件的机器人域是 0.71–0.86。这条差距是当前 dynamics 工作的主战场。</p>
+  <div class="grid" data-dom="general_final" data-n="4" data-idx="0000,0001,0002,0003" data-psnr="12.40,13.97,11.07,11.55"></div>
 </section>
 
 <section id="longform">
@@ -149,6 +150,17 @@
     <tr><td>VBench overall_consistency</td><td class="n">0.2051</td><td class="n lose">0.2180</td><td class="n">0.2180</td><td>打乱帧序后分数<b>逐位不变</b> ⇒ 对时间顺序完全不敏感</td></tr>
     <tr><td>Physics-IQ</td><td class="n">21.0</td><td class="n">1.0</td><td class="n">100.0</td><td>该轴可采；本模型 1.06 落在乱动地板上（如实报告，是下一个靶）</td></tr>
   </table></div>
+  <h2 style="margin-top:26px">运动保真度是强域依赖的</h2>
+  <p>flow ratio = 模型产出的运动量 ÷ 该域真实运动量（各行用自己域的真值，故可跨域读）。</p>
+  <div class="scroll"><table>
+    <tr><th>域 / 臂</th><th class="n">产出运动</th><th class="n">真实运动</th><th class="n">flow ratio</th></tr>
+    <tr><td>DROID（动作条件）</td><td class="n">1.938</td><td class="n">2.266</td><td class="n win">0.855</td></tr>
+    <tr><td>RT-1（动作条件）</td><td class="n">11.232</td><td class="n">15.746</td><td class="n win">0.713</td></tr>
+    <tr><td>DROID 双向+DF（对照）</td><td class="n">1.038</td><td class="n">2.266</td><td class="n">0.458</td></tr>
+    <tr><td>Track-B 通用视频（文本条件）</td><td class="n">1.470</td><td class="n">4.272</td><td class="n lose">0.344</td></tr>
+  </table></div>
+  <p class="note"><b>动作条件的机器人域（0.71–0.86）是文本条件通用视频域（0.32–0.34）的 2 倍以上。</b>所以"模型偏静态"是<b>通用视频域</b>的陈述——机器人域的产出已达真实运动的七到八成。这条也确定了运动干预的战场：通用视频域余量最大，机器人域几乎没有余量。</p>
+  <p class="note"><b>一个诚实的仪器边界。</b>RT-1 的 FVD 随训练上升 14.6% 时，我们的四个量——运动水平（−0.7%）、响应度（−0.012）、逐帧 LPIPS、纯外观 FID（+5.9%）——全都基本持平或涨得少得多。也就是说存在一种<b>时间层面的退化，本项目现有仪器测不到</b>，只有 FVD 抓得住。e 与 b 刻画的是运动的一阶量（平均幅度、跨场景的幅度分配），高阶时间结构仍是盲区，这一条会写进论文的 limitation。</p>
   <p class="note">VBench 九维经两地板法<b>零可采</b>：四维被冻结帧拿满分、五维被乱动追平或超过。本项目因此自造两把非比值尺子——跨速率弹性 e（同 clip 放大观测位移 1.72×，模型输出只放大 1.01×）与跨场景斜率 b（上表）——并规定每条运动结论必须同时报「水平 / 响应度 / 保真度」三个量。</p>
 </section>
 
