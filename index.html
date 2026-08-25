@@ -132,10 +132,17 @@
 </section>
 
 <section id="longform">
-  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置</div>
+  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机</div>
   <h2>长时程流式：真机 17 秒，且快于实时</h2>
-  <p>rolling KV cache 逐块提交，无重置。DROID 真机域 253 帧 PSNR 19.78；LIBERO 253 帧 20.86 @57.9 fps。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
-  <div class="grid" data-dom="longform_droid" data-n="4" data-psnr="18.3,20.2,17.7,18.9"></div>
+  <p>rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
+  <div class="grid" data-dom="longform_droid" data-n="4" data-idx="0000,0002,0005,0011"></div>
+  <div class="scroll"><table>
+    <tr><th>DROID 253 帧（24 集，同协议）</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
+    <tr><td>本页展示的配置（cfg 2）</td><td class="n">19.71</td><td class="n">0.144</td><td class="n win">338.5</td></tr>
+    <tr><td>此前展示的配置（cfg 1）</td><td class="n">19.85</td><td class="n">0.143</td><td class="n">386.3</td></tr>
+    <tr><td><b>自编码器往返上界</b>（GT 编解码后当生成结果打分）</td><td class="n">35.38</td><td class="n">0.0095</td><td class="n">—</td></tr>
+  </table></div>
+  <p class="note">这一域是全项目离上界最远的：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且该上界几乎不随时长衰减（21 帧 36.21 dB，253 帧 35.38 dB，仅 −0.83 dB）——<b>所以长时程伪影不是编解码或分块解码造成的，余量有 44% 还没用掉</b>。逐区域分解（遮罩由真值时间差分生成，配同面积随机遮罩地板）显示失效是<b>广谱且大致均匀</b>的，运动区并不显著更差（1.0–1.2×，未达预注册的 1.5× 判据）。当前正在训练 1B 规模的同配方阶梯来直接检验"这是不是规模问题"。</p>
 </section>
 
 <section id="floors">
