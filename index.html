@@ -63,7 +63,7 @@
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
   <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
-    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="#general">通用视频</a><a href="#longform">长时程</a><a href="#floors">评测地板</a>
+    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="#general">通用视频</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
   </nav>
 </header>
 
@@ -173,6 +173,58 @@
   <p class="note"><b>三个旋钮都被扫过，每一个的结论都写在上表里。</b>引导强度此前一律取 2（沿用而从未在机器人域扫过）：实测 1.5 优于 2 优于 3（274.8 / 283.5 / 337.8），且 PSNR 与 LPIPS 同向，故本页改用 1.5。永久锚点帧数扫描（1 / 2 / 4 → 283.5 / 284.7 / 323.5）显示<b>更宽的锚点买不到东西</b>，所以漂移不是「模型失去初始条件」那类失效。<br><b>长上下文课程是有效的</b>：在完全一致的采样设置下，FVD 沿 stage-1 → 2a → 2b 单调改善 513.9 → 350.5 → <b>283.5</b>（−45%）。<br><b>而一个推理侧参数能把同一权重打崩 2.4 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 283.5 掉到 713.2，并引入随时间累积的全局外观漂移。此前本页展示的片段正是受此影响。<br>这一域离上界仍远：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减——<b>剩下的差距不是编解码造成的</b>。本项目 DROID 线目前只投入 <b>214 GPU 时 @ 0.5B</b>；从零 1B 阶梯正在训练，预算 <b>994 GPU 时</b>。</p>
 </section>
 
+<section id="stages">
+  <div class="dom">TRAINING CURRICULUM · 同一采样设置 · 同一片段 · 只差训练到哪一段</div>
+  <h2>长上下文课程买到了什么</h2>
+  <p>三段窗口课程：先在 45 帧的短片上学局部动力学，再延到 125 帧，最后延到 253 帧。下面三路是同一条训练链的三个阶段终点，在<b>完全相同</b>的采样设置下续写同一段视频。</p>
+  <div class="multi" data-multi="droid_stages" data-idx="0000,0005"
+       data-cols="Ground truth:gt|stage-1 (45帧窗口) · FVD 513.9:s1|stage-2a (125帧) · FVD 350.5:s2a|stage-2b (253帧) · FVD 274.8:s2b"
+       data-note="253 帧 · 同一初始噪声"></div>
+  <div class="scroll"><table>
+    <tr><th>训练到哪一段</th><th class="n">训练窗口</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
+    <tr><td>stage-1 终点</td><td class="n">45 帧</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
+    <tr><td>stage-2a</td><td class="n">125 帧</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
+    <tr><td><b>stage-2b（本页展示）</b></td><td class="n">253 帧</td><td class="n win">19.71</td><td class="n win">0.1337</td><td class="n win">274.8</td></tr>
+  </table></div>
+  <p class="note">FVD 沿课程单调改善 <b>513.9 → 350.5 → 274.8（−47%）</b>，而 PSNR 基本持平——课程买到的是<b>分布层面的长时程一致性</b>，不是逐帧锐度。这是把三段钉在同一采样设置下才看得到的：各段若按自己配置文件里的设置评测，结论会完全反过来。</p>
+</section>
+
+<section id="sampler">
+  <div class="dom">INFERENCE ABLATION · 同一权重 · 只改流水线宽度</div>
+  <h2>一个推理旋钮值 2.6 倍</h2>
+  <p>流式推理用一条异步去噪阶梯：若干个 chunk 同时在飞，各自处在不同噪声水平，最早的那个完成后被提交进 KV cache。同时在飞的 chunk 数是个可调参数——下面两路是<b>同一个权重</b>，只改这一个数。</p>
+  <div class="multi" data-multi="droid_sampler" data-idx="0000,0005"
+       data-cols="Ground truth:gt|在飞 3 个 · FVD 274.8:narrow|在飞 8 个 · FVD 713.2:wide"
+       data-note="同权重 · 同片段 · 同引导强度"></div>
+  <p class="note">把在飞 chunk 数从 3 提到 8，FVD 从 <b>274.8 掉到 713.2（2.6 倍）</b>，PSNR 从 19.71 掉到 16.62，并引入随时间累积的<b>全局外观漂移</b>——逐帧亮度误差的斜率从 +1.0 变成 −3.4 / 100 帧，饱和度误差的增速快 20–60 倍。机制上讲得通：在飞的 chunk 越多，一个 chunk 提交时所注意到的邻居里"仍然很噪"的就越多。<br>⚠️ 这与去噪<b>次数</b>是两件事，而它们的效应符号相反：在固定流水线宽度下把每个 chunk 的更新次数从 6 提到 12 反而更好（296.0 → 283.5）。两者都会抬高"有效步数"，所以把它们合称"深度"会把两个相消的效应混在一起。</p>
+</section>
+
+<section id="contrib">
+  <div class="dom">METHOD ABLATION · 同骨干 · 同课程 · 同步数 · 只关掉两项训练侧改动</div>
+  <h2>两项训练侧改动值 2.3 倍</h2>
+  <p>本项目在标准配方之外加了两件事：一是让训练时的噪声调度向推理时实际走的那条阶梯对齐，二是训练时以一定概率把"已提交历史"当作干净上下文喂回去。下面两路是同骨干、同课程、同步数的两条链，只差这两项开关。</p>
+  <div class="multi" data-multi="droid_contrib" data-idx="0000,0005"
+       data-cols="Ground truth:gt|开启（本项目）· FVD 274.8:with|关闭 · FVD 629.9:without"
+       data-note="同骨干 · 同 253 帧课程 · 同 16k 步"></div>
+  <p class="note">关掉这两项后 FVD 从 <b>274.8 升到 629.9（2.3 倍）</b>，PSNR 从 19.71 掉到 16.91。⚠️ 这个对比此前在错误的采样设置下做过一次，当时只测出 13% 的差距；换到正确设置后差距是 <b>122%</b>——<b>在坏工作点上做的对照，其差值幅度不可信，方向对了也可能差一个数量级</b>。</p>
+</section>
+
+<section id="ceiling">
+  <div class="dom">EVALUATION CEILING · 生成质量的物理上限</div>
+  <h2>还有多少余量没用掉</h2>
+  <p>所有帧都要经过一个冻结的视频自编码器（时间 4 倍、空间 16 倍压缩）。把真值视频编码再解码、然后当作生成结果打分，得到的就是任何模型都不可能超过的上限。</p>
+  <div class="multi" data-multi="droid_ceiling" data-idx="0000,0005"
+       data-cols="Ground truth:gt|自编码器往返（上限）· 35.38 dB:rt|本模型生成 · 19.71 dB:pred"
+       data-note="253 帧 · 同一片段"></div>
+  <div class="scroll"><table>
+    <tr><th>253 帧 · 24 集</th><th class="n">PSNR</th><th class="n">SSIM</th><th class="n">LPIPS</th></tr>
+    <tr><td><b>自编码器往返上限</b></td><td class="n">35.38</td><td class="n">0.9641</td><td class="n">0.0095</td></tr>
+    <tr><td>本模型（0.5B · 214 GPU 时）</td><td class="n">19.71</td><td class="n">—</td><td class="n">0.1337</td></tr>
+    <tr><td>余量使用率</td><td class="n" colspan="3">PSNR 用掉 <b>56%</b> · LPIPS 差 <b>14 倍</b></td></tr>
+  </table></div>
+  <p class="note">上限在 21 帧处是 36.21 dB、253 帧处 35.38 dB，<b>只掉 0.83 dB</b>——自编码器的损失是空间性的，不随时长累积。所以剩下的伪影<b>不是编解码造成的</b>，中间那一路视频肉眼也证实了这点：往返画面干净，生成画面在机械臂处仍有明显失真。余量还有 44%，这正是规模研究要去拿的部分。</p>
+</section>
+
 <section id="floors">
   <div class="dom">EVALUATION INTEGRITY · 三个 benchmark 的地板判决</div>
   <h2>现行动态指标：或由不动最大化，或由乱动饱和</h2>
@@ -227,6 +279,24 @@ document.querySelectorAll('.grid4s').forEach(g=>{
      +'<div><video src="videos/scratch_ladder/causal_scratch_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果 从零 · FVD 852</div></div>'
      +'<div><video src="videos/scratch_ladder/causal_warm_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果+预训练 · FVD 499</div></div></div>'
      +'<div class="bar"><button>▶ 同步播放</button><span class="chip">同一 clip · 同一初始噪声</span></div>';
+    const vids=d.querySelectorAll('video'),b=d.querySelector('button');
+    b.onclick=()=>{const paused=vids[0].paused;
+      vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
+      b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
+    g.appendChild(d);});});
+document.querySelectorAll('.multi').forEach(g=>{
+  const dom=g.dataset.multi, idx=g.dataset.idx.split(','),
+        cols=g.dataset.cols.split('|').map(c=>{const k=c.split(':');return{lab:k[0],pre:k[1]};}),
+        note=g.dataset.note||'';
+  idx.forEach(i=>{
+    const d=document.createElement('div');d.className='take';
+    let h='<div class="duo" style="grid-template-columns:repeat('+cols.length+',1fr)">';
+    cols.forEach((c,k)=>{
+      h+='<div><video src="videos/'+dom+'/'+c.pre+'_'+i+'.mp4" loop muted playsinline></video>'
+        +'<div class="lab'+(k?' gen':'')+'">'+c.lab+'</div></div>';});
+    h+='</div><div class="bar"><button>▶ 同步播放</button>'
+      +(note?'<span class="chip">'+note+'</span>':'')+'</div>';
+    d.innerHTML=h;
     const vids=d.querySelectorAll('video'),b=d.querySelector('button');
     b.onclick=()=>{const paused=vids[0].paused;
       vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
