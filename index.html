@@ -178,7 +178,7 @@
   <h2>长上下文课程买到了什么</h2>
   <p>三段窗口课程：先在 45 帧的短片上学局部动力学，再延到 125 帧，最后延到 253 帧。下面三路是同一条训练链的三个阶段终点，在<b>完全相同</b>的采样设置下续写同一段视频。</p>
   <div class="multi" data-multi="droid_stages" data-idx="0000,0005"
-       data-cols="Ground truth:gt|stage-1 (45帧窗口) · FVD 513.9:s1|stage-2a (125帧) · FVD 350.5:s2a|stage-2b (253帧) · FVD 274.8:s2b"
+       data-cols="Ground truth:gt|stage-1 (45帧窗口) · FVD 513.9:s1|stage-2a (125帧) · FVD 350.5:s2a|stage-2b (253帧) · FVD 296.0:s2b"
        data-note="253 帧 · 同一初始噪声"></div>
   <div class="scroll"><table>
     <tr><th>训练到哪一段</th><th class="n">训练窗口</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
@@ -194,7 +194,7 @@
   <h2>一个推理旋钮值 2.6 倍</h2>
   <p>流式推理用一条异步去噪阶梯：若干个 chunk 同时在飞，各自处在不同噪声水平，最早的那个完成后被提交进 KV cache。同时在飞的 chunk 数是个可调参数——下面两路是<b>同一个权重</b>，只改这一个数。</p>
   <div class="multi" data-multi="droid_sampler" data-idx="0000,0005"
-       data-cols="Ground truth:gt|在飞 3 个 · FVD 274.8:narrow|在飞 8 个 · FVD 713.2:wide"
+       data-cols="Ground truth:gt|在飞 3 个 · FVD 296.0:narrow|在飞 8 个 · FVD 724.5:wide"
        data-note="同权重 · 同片段 · 同引导强度"></div>
   <p class="note">把在飞 chunk 数从 3 提到 8，FVD 从 <b>274.8 掉到 713.2（2.6 倍）</b>，PSNR 从 19.71 掉到 16.62，并引入随时间累积的<b>全局外观漂移</b>——逐帧亮度误差的斜率从 +1.0 变成 −3.4 / 100 帧，饱和度误差的增速快 20–60 倍。机制上讲得通：在飞的 chunk 越多，一个 chunk 提交时所注意到的邻居里"仍然很噪"的就越多。<br>⚠️ 这与去噪<b>次数</b>是两件事，而它们的效应符号相反：在固定流水线宽度下把每个 chunk 的更新次数从 6 提到 12 反而更好（296.0 → 283.5）。两者都会抬高"有效步数"，所以把它们合称"深度"会把两个相消的效应混在一起。</p>
 </section>
@@ -204,7 +204,7 @@
   <h2>两项训练侧改动值 2.3 倍</h2>
   <p>本项目在标准配方之外加了两件事：一是让训练时的噪声调度向推理时实际走的那条阶梯对齐，二是训练时以一定概率把"已提交历史"当作干净上下文喂回去。下面两路是同骨干、同课程、同步数的两条链，只差这两项开关。</p>
   <div class="multi" data-multi="droid_contrib" data-idx="0000,0005"
-       data-cols="Ground truth:gt|开启（本项目）· FVD 274.8:with|关闭 · FVD 629.9:without"
+       data-cols="Ground truth:gt|开启（本项目）· FVD 283.5:with|关闭 · FVD 629.9:without"
        data-note="同骨干 · 同 253 帧课程 · 同 16k 步"></div>
   <p class="note">关掉这两项后 FVD 从 <b>274.8 升到 629.9（2.3 倍）</b>，PSNR 从 19.71 掉到 16.91。⚠️ 这个对比此前在错误的采样设置下做过一次，当时只测出 13% 的差距；换到正确设置后差距是 <b>122%</b>——<b>在坏工作点上做的对照，其差值幅度不可信，方向对了也可能差一个数量级</b>。</p>
 </section>
