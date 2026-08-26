@@ -155,20 +155,22 @@
 </section>
 
 <section id="longform">
-  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 283.5</div>
+  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 274.8</div>
   <h2>长时程流式：真机 17 秒，且快于实时</h2>
   <p>本节展示<b>本项目从零训练</b>的 0.5B 模型（214 GPU 时）。rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
   <div class="grid" data-dom="longform_droid" data-n="4" data-idx="0000,0002,0005,0011"></div>
   <div class="scroll"><table>
     <tr><th>DROID 253 帧 · 24 集 · 协议逐项一致</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
-    <tr><td><b>本页展示：从零 0.5B · 窄流水线 · 12 步</b></td><td class="n win">19.61</td><td class="n win">0.1363</td><td class="n win">283.5</td></tr>
+    <tr><td><b>本页展示：从零 0.5B · 窄流水线 · 12 步 · 引导 1.5</b></td><td class="n win">19.71</td><td class="n win">0.1337</td><td class="n win">274.8</td></tr>
+    <tr><td>同上，引导 2（此前默认）</td><td class="n">19.61</td><td class="n">0.1363</td><td class="n">283.5</td></tr>
+    <tr><td class="lose">同上，引导 3</td><td class="n lose">19.37</td><td class="n lose">0.1458</td><td class="n lose">337.8</td></tr>
     <tr><td>从零 0.5B · 窄流水线 · 6 步</td><td class="n">19.68</td><td class="n">0.1368</td><td class="n">296.0</td></tr>
     <tr><td>从零 0.5B · stage-2a（中间段）</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
     <tr><td>从零 0.5B · stage-1 终点</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
     <tr><td class="lose">同一权重，仅把在飞 chunk 数 3→8</td><td class="n lose">16.62</td><td class="n lose">0.2191</td><td class="n lose">713.2</td></tr>
     <tr><td><b>自编码器往返上界</b>（GT 编解码后当生成结果打分）</td><td class="n">35.38</td><td class="n">0.0095</td><td class="n">—</td></tr>
   </table></div>
-  <p class="note"><b>长上下文课程是有效的</b>：在完全一致的采样设置下，FVD 沿 stage-1 → 2a → 2b 单调改善 513.9 → 350.5 → <b>283.5</b>（−45%）。<br><b>而一个推理侧参数能把同一权重打崩 2.4 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 283.5 掉到 713.2，并引入随时间累积的全局外观漂移。此前本页展示的片段正是受此影响。<br>这一域离上界仍远：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减——<b>剩下的差距不是编解码造成的</b>。本项目 DROID 线目前只投入 <b>214 GPU 时 @ 0.5B</b>；从零 1B 阶梯正在训练，预算 <b>994 GPU 时</b>。</p>
+  <p class="note"><b>三个旋钮都被扫过，每一个的结论都写在上表里。</b>引导强度此前一律取 2（沿用而从未在机器人域扫过）：实测 1.5 优于 2 优于 3（274.8 / 283.5 / 337.8），且 PSNR 与 LPIPS 同向，故本页改用 1.5。永久锚点帧数扫描（1 / 2 / 4 → 283.5 / 284.7 / 323.5）显示<b>更宽的锚点买不到东西</b>，所以漂移不是「模型失去初始条件」那类失效。<br><b>长上下文课程是有效的</b>：在完全一致的采样设置下，FVD 沿 stage-1 → 2a → 2b 单调改善 513.9 → 350.5 → <b>283.5</b>（−45%）。<br><b>而一个推理侧参数能把同一权重打崩 2.4 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 283.5 掉到 713.2，并引入随时间累积的全局外观漂移。此前本页展示的片段正是受此影响。<br>这一域离上界仍远：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减——<b>剩下的差距不是编解码造成的</b>。本项目 DROID 线目前只投入 <b>214 GPU 时 @ 0.5B</b>；从零 1B 阶梯正在训练，预算 <b>994 GPU 时</b>。</p>
 </section>
 
 <section id="floors">
