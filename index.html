@@ -136,22 +136,22 @@
 <section id="general">
   <div class="dom">通用视频 · 文本条件 · checkpoint 55k / 150k（训练中）</div>
   <h2>同一架构的通用视频线</h2>
-  <p>本节以扫描出的最优去噪深度重制（每 chunk 8 次更新）。此前展示的是验证集前 4 片，其中一片的模型产出光流只有 0.90（全池中位 1.57）——<b>选片本身偏静，这是我们的错误</b>。现改为产出运动量高且<b>运动比接近 1</b> 的四片，逐片标注。</p>
-  <div class="grid" data-dom="general_final" data-n="4" data-idx="0023,0015,0027,0014" data-psnr="9.62,10.79,13.18,9.10"></div>
+  <p><b>本节此前展示的四片是坏的，已全部换掉。</b>它们按"运动比"选出、看着是这一域最忠实的几片，逐帧抽看才发现<b>全部在第 40 帧崩解成抽象色块</b>。原因不是巧合：<b>画面解体会产生极大的光流</b>，所以光流比值型指标把崩解打成"运动忠实"——指标与失效模式指向同一方向，纯按指标选片必然选中最坏的几片。复查后判明每 chunk 更新次数 <b>4 与 8 都在第 40 帧崩，只有 2 撑得满 81 帧</b>。本节现全部改用 2，四片均已逐帧确认末帧完整。</p>
+  <div class="grid" data-dom="general_final" data-n="4" data-idx="0001,0017,0020,0003" data-psnr="14.07,14.95,13.62,12.11"></div>
   <div class="scroll"><table>
-    <tr><th>本节四片</th><th class="n">模型产出光流</th><th class="n">真值光流</th><th class="n">运动比</th><th>内容</th></tr>
-    <tr><td>clip 23</td><td class="n win">4.84</td><td class="n">6.28</td><td class="n win">0.77</td><td>红衣男子，微笑说话</td></tr>
-    <tr><td>clip 15</td><td class="n">3.95</td><td class="n">4.43</td><td class="n win">0.89</td><td>男子驾驶敞篷车</td></tr>
-    <tr><td>clip 27</td><td class="n win">5.47</td><td class="n">2.48</td><td class="n">2.21</td><td>橙色物体特写 —— 模型<b>多给</b>了运动</td></tr>
-    <tr><td>clip 14</td><td class="n">2.05</td><td class="n">2.78</td><td class="n win">0.74</td><td>女子骑车</td></tr>
+    <tr><th>本节四片（每 chunk 2 次更新）</th><th class="n">模型产出光流</th><th class="n">真值光流</th><th class="n">运动比</th><th>内容</th></tr>
+    <tr><td>clip 01</td><td class="n">0.84</td><td class="n">4.43</td><td class="n lose">0.19</td><td>山崖前讲解的男子 —— <b>本域画质最好</b></td></tr>
+    <tr><td>clip 17</td><td class="n">0.96</td><td class="n">5.27</td><td class="n lose">0.18</td><td>红衣男子与妆造人物，双主体身份稳住</td></tr>
+    <tr><td>clip 20</td><td class="n">1.24</td><td class="n">9.37</td><td class="n lose">0.13</td><td>车内双人，右侧人物有涂抹</td></tr>
+    <tr><td>clip 03</td><td class="n">2.52</td><td class="n win">11.32</td><td class="n lose">0.22</td><td>车内男子看手机 —— 真值运动最大，末帧面部变形</td></tr>
   </table></div>
   <div class="scroll"><table>
-    <tr><th>去噪深度（每 chunk 更新次数）</th><th class="n">响应度 b</th><th class="n">整体运动比</th><th class="n">PSNR</th></tr>
-    <tr><td><b>8（本节采用）</b></td><td class="n win">0.466</td><td class="n win">0.483</td><td class="n">11.32</td></tr>
-    <tr><td>4（此前）</td><td class="n lose">0.288</td><td class="n">0.476</td><td class="n">11.97</td></tr>
-    <tr><td>2</td><td class="n">0.517</td><td class="n lose">0.337</td><td class="n win">13.01</td></tr>
+    <tr><th>去噪深度（每 chunk 更新次数）</th><th class="n">响应度 b</th><th class="n">整体运动比</th><th class="n">PSNR</th><th>81 帧是否完整</th></tr>
+    <tr><td><b>2（本节采用）</b></td><td class="n win">0.517</td><td class="n lose">0.337</td><td class="n win">13.01</td><td class="win">是</td></tr>
+    <tr><td>4</td><td class="n lose">0.288</td><td class="n">0.476</td><td class="n">11.97</td><td class="lose">否 —— 第 40 帧崩解</td></tr>
+    <tr><td>8（此前采用）</td><td class="n">0.466</td><td class="n">0.483</td><td class="n">11.32</td><td class="lose">否 —— 第 40 帧崩解</td></tr>
   </table></div>
-  <p class="note"><b>响应度 b</b> 是"场景动得多 10 倍时模型是否也多给约 10 倍运动"的斜率（1 为忠实、0 为完全不跟随）。把每个 chunk 的去噪更新次数从 4 提到 8，<b>b 从 0.288 抬到 0.466（1.6 倍）而整体运动量不变</b>，代价是 0.65 dB PSNR。降到 2 能把 b 抬到 0.517、PSNR 最高，但整体运动量掉到 0.337——画面会更静，所以本节不用它。<br><b>这一域的运动亏损是结构性的，不只是欠训练。</b>同一架构在动作条件的机器人域能达到 b = 0.89–1.03，这里只有 0.47。原因是<b>文本不指定运动幅度</b>："一个人骑自行车"没有说骑多快，模型对运动尺度没有可用信号，只能回归语料均值——于是慢场景多给、快场景少给。<b>引导对此无效</b>（cfg 2/4/7 给出 b = 0.288/0.269/0.366，无趋势），两条损失侧路线（时间方差匹配、速度重分配）也都已按预注册判据关闭。剩下的是训练量与<b>条件侧</b>：该域只训到 55k / 150k。</p>
+  <p class="note"><b>更正一条此前的结论。</b>本页曾写"把每 chunk 更新次数从 4 提到 8 能把响应度 b 从 0.288 抬到 0.466"，并据此选用 8。补看画面后该结论作废：<b>4 与 8 都是崩的，而 2 的 b 最高（0.517）且是唯一完整的</b>。8 抬起来的是运动<b>水平</b>（整体比 0.48 vs 2 的 0.34），而那个水平来自崩解本身。这正是本项目"水平与响应度是两个量"这条纪律的又一例——只不过这次是<b>失效模式伪装成了水平</b>。<br><b>诚实的代价</b>：稳定设置下这四片的运动比只有 0.13–0.22，即模型只给出真值约五分之一的运动量。这一域的真实状态是<b>"稳而慢"与"动而碎"之间没有好选项</b>，不是参数没调对。<br><b>运动亏损是结构性的。</b>同一架构在动作条件的机器人域 b 能到 0.46–0.89，这里是 0.29–0.52。原因是<b>文本不指定运动幅度</b>："一个人骑自行车"没有说骑多快，模型对运动尺度没有可用信号。<b>引导对此无效</b>（cfg 2/4/7 给出 b = 0.288/0.269/0.366，无趋势），两条损失侧路线（时间方差匹配、速度重分配）也都已按预注册判据关闭。修法在<b>条件侧</b>，尚未实现；该域另只训到 55k / 150k。</p>
 </section>
 
 <section id="longform">
