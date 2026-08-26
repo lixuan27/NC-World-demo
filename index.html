@@ -121,9 +121,15 @@
 </section>
 
 <section id="bridge">
-  <div class="dom">BRIDGE-V2 · 终版 100k 全预算 · 并读 FVD 45.08 · 真实机器人</div>
+  <div class="dom">BRIDGE-V2 · 终版 100k · <b>77 帧</b>（数据集上限）· 真实机器人</div>
   <h2>真实域：背景稳定，运动区仍是主要失效</h2>
-  <p>本节片段同样以更深的去噪设置重制（每 chunk 2 → 8 次更新）：<b>PSNR 26.44 → 26.93、LPIPS 0.0668 → 0.0628</b>。⚠️ 该域三个指标不一致——FVD 在 237.0 / 232.1 / 237.0 之间基本持平且在 24 集下可能是噪声，取 8 步是<b>基于两列单调改善的判断，不是测量</b>。</p>
+  <p>此前本节展示的是 <b>9 帧（0.6 秒）</b>片段——那是<b>外部并读协议</b>的长度（IRASim 8 帧续写），用于 benchmark 行正确、用于展示荒谬。现改为 <b>77 帧</b>：<b>这是数据集的硬上限</b>（Bridge 最长的 held-out episode 只有 79 帧，再长就没有真值可对），也是模型 25 帧训练窗口的 <b>3 倍</b>，属 rolling cache 的真实长时程外推。</p>
+  <div class="scroll"><table>
+    <tr><th>Bridge-V2 · 23 集 · 77 帧 · 窄流水线 · 8 步</th><th class="n">PSNR</th><th class="n">SSIM</th><th class="n">LPIPS</th><th class="n">FVD</th></tr>
+    <tr><td>全片平均</td><td class="n">22.58</td><td class="n">0.855</td><td class="n">0.0748</td><td class="n">251.7</td></tr>
+    <tr><td>首帧 → 末帧 PSNR</td><td class="n" colspan="4">37.08 → 20.26（77 帧内的漂移曲线）</td></tr>
+  </table></div>
+  <p class="note">⚠️ 这些数字与看板上的并读 <b>FVD 45.08</b>（512 集 · 9 帧）<b>完全不可比</b>——集数与帧长都不同，FVD 只在同 clip 数同长度下可比。两套数字必须分开读。</p>
   <div class="grid" data-dom="bridge_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
 </section>
 
@@ -143,21 +149,20 @@
 </section>
 
 <section id="longform">
-  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 283.5</div>
+  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 89.9</div>
   <h2>长时程流式：真机 17 秒，且快于实时</h2>
-  <p>rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
+  <p>本节展示本项目 <b>1B 权重</b>的产出。rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
   <div class="grid" data-dom="longform_droid" data-n="4" data-idx="0000,0002,0005,0011"></div>
   <div class="scroll"><table>
     <tr><th>DROID 253 帧 · 24 集 · 协议逐项一致</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
-    <tr><td><b>本页展示：stage-2 终版 + 最优采样设置（6→12 步）</b></td><td class="n win">19.61</td><td class="n win">0.1363</td><td class="n win">283.5</td></tr>
-    <tr><td>同一模型，6 步</td><td class="n">19.68</td><td class="n">0.1368</td><td class="n">296.0</td></tr>
-    <tr><td>stage-2a（中间段）</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
-    <tr><td>stage-1 终点</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
-    <tr><td>此前展示的检查点</td><td class="n">19.70</td><td class="n">0.1443</td><td class="n">338.5</td></tr>
-    <tr><td class="lose">同一模型，仅把在飞 chunk 数 3→8</td><td class="n lose">16.62</td><td class="n lose">0.2191</td><td class="n lose">713.2</td></tr>
+    <tr><td><b>本页展示：1B · 窄流水线 · 12 步</b></td><td class="n win">24.08</td><td class="n win">0.0594</td><td class="n win">89.9</td></tr>
+    <tr><td>1B · 窄流水线 · 6 步</td><td class="n">24.08</td><td class="n">0.0612</td><td class="n">91.9</td></tr>
+    <tr><td>0.5B · 窄流水线 · 6 步</td><td class="n">23.08</td><td class="n">0.0737</td><td class="n">128.4</td></tr>
+    <tr><td>本项目从零训练的 0.5B（214 GPU 时）</td><td class="n">19.61</td><td class="n">0.1363</td><td class="n">283.5</td></tr>
+    <tr><td class="lose">同一 1B 权重，仅把在飞 chunk 数 3→8</td><td class="n lose">16.08</td><td class="n lose">0.2737</td><td class="n lose">609.1</td></tr>
     <tr><td><b>自编码器往返上界</b>（GT 编解码后当生成结果打分）</td><td class="n">35.38</td><td class="n">0.0095</td><td class="n">—</td></tr>
   </table></div>
-  <p class="note">两件事值得单独说。<b>其一，长上下文课程确实有效</b>：在完全一致的采样设置下，FVD 沿 stage-1 → 2a → 2b 单调改善 513.9 → 350.5 → <b>296.0</b>（−42%）。<b>其二，一个推理侧参数能把同一个模型打崩 2.4 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 296.0 掉到 713.2，并引入随时间累积的全局外观漂移（逐帧亮度斜率由 +1.0 变为 −3.4 / 100 帧）。此前的展示片正是受此影响。<br>这一域仍是全项目离上界最远的：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减（21 帧 36.21，253 帧 35.38，仅 −0.83 dB）——<b>所以剩下的伪影不是编解码造成的</b>。我们的训练算力约为参考实现的 1/5–1/8（214 GPU 时 @0.5B，对方公布为「单台 8 卡服务器数天」且规模至 1B），这是剩余差距的一阶解释。</p>
+  <p class="note">两件事值得单独说。<b>其一，采样器设置可以让同一个权重差 6.8 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 89.9 掉到 609.1，并引入随时间累积的全局外观漂移。此前本页展示的片段正是受此影响。<b>该失效对本项目的每一个权重都成立</b>，是采样器性质而非模型性质。<br><b>其二，训练量的作用是可分离的</b>：同为 0.5B、同架构、同采样设置，充分训练的权重是 128.4，本项目从零训练 214 GPU 时的权重是 283.5——<b>相差 2.2 倍</b>。参考预算是「单台 8 卡服务器数天」＝ 576–960 GPU 时；我们已按实测吞吐启动 <b>994 GPU 时</b>的 1B 续训，叠加后总量超过其上界。<br>这一域离上界仍有距离：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减（21 帧 36.21，253 帧 35.38）——<b>剩下的伪影不是编解码造成的</b>。</p>
 </section>
 
 <section id="reference">
