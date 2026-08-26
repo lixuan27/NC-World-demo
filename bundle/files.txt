@@ -16,14 +16,6 @@ droid/clip14_groundtruth.mp4
 droid/clip17_actions.csv
 droid/clip17_generated.mp4
 droid/clip17_groundtruth.mp4
-general/clip01_generated.mp4
-general/clip01_groundtruth.mp4
-general/clip03_generated.mp4
-general/clip03_groundtruth.mp4
-general/clip17_generated.mp4
-general/clip17_groundtruth.mp4
-general/clip20_generated.mp4
-general/clip20_groundtruth.mp4
 langtable/clip05_actions.csv
 langtable/clip05_generated.mp4
 langtable/clip05_groundtruth.mp4

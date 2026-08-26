@@ -63,7 +63,7 @@
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
   <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
-    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="#general">通用视频</a><a href="bundle/README.md">⬇ 精选包</a><a href="STAGE_REPORT_2026-08-27.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
+    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="STAGE_REPORT_2026-08-27.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
   </nav>
 </header>
 
@@ -131,27 +131,6 @@
   </table></div>
   <p class="note">⚠️ 这些数字与看板上的并读 <b>FVD 45.08</b>（512 集 · 9 帧）<b>完全不可比</b>——集数与帧长都不同，FVD 只在同 clip 数同长度下可比。两套数字必须分开读。</p>
   <div class="grid" data-dom="bridge_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
-</section>
-
-<section id="general">
-  <div class="dom">通用视频 · 文本条件 · checkpoint 55k / 150k（训练中）</div>
-  <h2>同一架构的通用视频线</h2>
-  <p><b>本节此前展示的四片是坏的，已全部换掉。</b>它们按"运动比"选出、看着是这一域最忠实的几片，逐帧抽看才发现<b>全部在第 40 帧崩解成抽象色块</b>。原因不是巧合：<b>画面解体会产生极大的光流</b>，所以光流比值型指标把崩解打成"运动忠实"——指标与失效模式指向同一方向，纯按指标选片必然选中最坏的几片。复查后判明每 chunk 更新次数 <b>4 与 8 都在第 40 帧崩，只有 2 撑得满 81 帧</b>。本节现全部改用 2，四片均已逐帧确认末帧完整。</p>
-  <div class="grid" data-dom="general_final" data-n="4" data-idx="0001,0017,0020,0003" data-psnr="14.07,14.95,13.62,12.11"></div>
-  <div class="scroll"><table>
-    <tr><th>本节四片（每 chunk 2 次更新）</th><th class="n">模型产出光流</th><th class="n">真值光流</th><th class="n">运动比</th><th>内容</th></tr>
-    <tr><td>clip 01</td><td class="n">0.84</td><td class="n">4.43</td><td class="n lose">0.19</td><td>山崖前讲解的男子 —— <b>本域画质最好</b></td></tr>
-    <tr><td>clip 17</td><td class="n">0.96</td><td class="n">5.27</td><td class="n lose">0.18</td><td>红衣男子与妆造人物，双主体身份稳住</td></tr>
-    <tr><td>clip 20</td><td class="n">1.24</td><td class="n">9.37</td><td class="n lose">0.13</td><td>车内双人，右侧人物有涂抹</td></tr>
-    <tr><td>clip 03</td><td class="n">2.52</td><td class="n win">11.32</td><td class="n lose">0.22</td><td>车内男子看手机 —— 真值运动最大，末帧面部变形</td></tr>
-  </table></div>
-  <div class="scroll"><table>
-    <tr><th>去噪深度（每 chunk 更新次数）</th><th class="n">响应度 b</th><th class="n">整体运动比</th><th class="n">PSNR</th><th>81 帧是否完整</th></tr>
-    <tr><td><b>2（本节采用）</b></td><td class="n win">0.517</td><td class="n lose">0.337</td><td class="n win">13.01</td><td class="win">是</td></tr>
-    <tr><td>4</td><td class="n lose">0.288</td><td class="n">0.476</td><td class="n">11.97</td><td class="lose">否 —— 第 40 帧崩解</td></tr>
-    <tr><td>8（此前采用）</td><td class="n">0.466</td><td class="n">0.483</td><td class="n">11.32</td><td class="lose">否 —— 第 40 帧崩解</td></tr>
-  </table></div>
-  <p class="note"><b>更正一条此前的结论。</b>本页曾写"把每 chunk 更新次数从 4 提到 8 能把响应度 b 从 0.288 抬到 0.466"，并据此选用 8。补看画面后该结论作废：<b>4 与 8 都是崩的，而 2 的 b 最高（0.517）且是唯一完整的</b>。8 抬起来的是运动<b>水平</b>（整体比 0.48 vs 2 的 0.34），而那个水平来自崩解本身。这正是本项目"水平与响应度是两个量"这条纪律的又一例——只不过这次是<b>失效模式伪装成了水平</b>。<br><b>诚实的代价</b>：稳定设置下这四片的运动比只有 0.13–0.22，即模型只给出真值约五分之一的运动量。这一域的真实状态是<b>"稳而慢"与"动而碎"之间没有好选项</b>，不是参数没调对。<br><b>运动亏损是结构性的。</b>同一架构在动作条件的机器人域 b 能到 0.46–0.89，这里是 0.29–0.52。原因是<b>文本不指定运动幅度</b>："一个人骑自行车"没有说骑多快，模型对运动尺度没有可用信号。<b>引导对此无效</b>（cfg 2/4/7 给出 b = 0.288/0.269/0.366，无趋势），两条损失侧路线（时间方差匹配、速度重分配）也都已按预注册判据关闭。修法在<b>条件侧</b>，尚未实现；该域另只训到 55k / 150k。</p>
 </section>
 
 <section id="longform">
