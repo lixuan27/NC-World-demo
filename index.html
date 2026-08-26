@@ -84,7 +84,7 @@
   <div class="scroll"><table>
     <tr><th>项</th><th class="n">数值</th><th>说明</th></tr>
     <tr><td>受控双向对照（同代码同参同 clip）</td><td class="n win">FVD 229.5 vs 1087</td><td>PSNR 21.47/17.73 · SSIM 0.819/0.644 · LPIPS 0.110/0.240，四项全胜</td></tr>
-    <tr><td>LIBERO 终版 100k（49 帧）</td><td class="n">PSNR 33.59 · FVD 56.87</td><td>较 20k 全指标改善，长时程受益更大（f49 +1.45 dB vs f25 +1.06）</td></tr>
+    <tr><td>LIBERO 终版 100k（49 帧 · <b>48 集 · 2 步去噪</b>）</td><td class="n">PSNR 33.59 · FVD 56.87</td><td>较 20k 全指标改善，长时程受益更大（f49 +1.45 dB vs f25 +1.06）。⚠️ 该行为 <b>48 集</b>协议，与下方 LIBERO 节的 <b>24 集</b>数字<b>不可比</b>（FVD 仅在同 clip 数下可比）；其采样深度也是旧的 2 步。</td></tr>
     <tr><td>流式吞吐（真机域，生产配置）</td><td class="n win">48.6 fps</td><td>3.24× 实时；首帧延迟 188 ms（双向模型 5.6 s）</td></tr>
     <tr><td>在线重规划</td><td class="n">省算 36–74%</td><td>输出与全量重算 bit-exact（16/16）</td></tr>
     <tr><td>动作→画面结构延迟地板</td><td class="n">533 ms</td><td>= 时间粒度 Δt_c，实验证实恰为质量最优点</td></tr>
@@ -107,7 +107,7 @@
 </section>
 
 <section id="libero">
-  <div class="dom">LIBERO · 终版 100k · 49 帧 · PSNR 34.12 · FVD 56.5</div>
+  <div class="dom">LIBERO · 终版 100k · 49 帧 · 24 集 · 8 步去噪 · PSNR 33.99 · LPIPS 0.0190 · FVD 56.5</div>
   <h2>机械臂操作：全程锐利刚体，超实时生成</h2>
   <p>本节片段以逐域扫描出的最优采样深度重制：把每个 chunk 的去噪更新次数从 2 提到 8（已提交历史与活动窗口不变），<b>PSNR 31.50 → 33.99（+2.5 dB）、LPIPS 0.0228 → 0.0190、FVD 64.3 → 56.5（−12.1%）</b>。不重训任何模型。</p>
   <div class="grid" data-dom="libero_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
