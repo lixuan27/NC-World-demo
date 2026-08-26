@@ -61,7 +61,7 @@
 
 <header>
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
-  <p class="sub">Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
+  <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
     <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="#general">通用视频</a><a href="#longform">长时程</a><a href="#floors">评测地板</a>
   </nav>
@@ -107,20 +107,23 @@
 </section>
 
 <section id="libero">
-  <div class="dom">LIBERO · 终版 100k 全预算 · PSNR 33.59 @49 帧</div>
+  <div class="dom">LIBERO · 终版 100k · 49 帧 · PSNR 34.12 · FVD 56.5</div>
   <h2>机械臂操作：全程锐利刚体，超实时生成</h2>
+  <p>本节片段以逐域扫描出的最优采样深度重制：把每个 chunk 的去噪更新次数从 2 提到 8（已提交历史与活动窗口不变），<b>PSNR 31.50 → 33.99（+2.5 dB）、LPIPS 0.0228 → 0.0190、FVD 64.3 → 56.5（−12.1%）</b>。不重训任何模型。</p>
   <div class="grid" data-dom="libero_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
 </section>
 
 <section id="langtable">
-  <div class="dom">LANGUAGE-TABLE · 终版 120k 全预算 · FVD 37.97</div>
+  <div class="dom">LANGUAGE-TABLE · 终版 120k 全预算 · 并读 FVD 37.97</div>
   <h2>多物体交互下的稳定跟踪</h2>
+  <p>该域是唯一一个<b>采样深度扫描确认现状即最优</b>的域（41 帧 24 集协议下 FVD 168.0 / 170.7 / 179.1，对应 2 / 4 / 8 步）。确认默认值的扫描也是结果，故本节片段设置未变。</p>
   <div class="grid" data-dom="lt_final" data-n="2" data-idx="0000,0007"></div>
 </section>
 
 <section id="bridge">
-  <div class="dom">BRIDGE-V2 · 终版 100k 全预算 · FVD 45.08 · 真实机器人</div>
+  <div class="dom">BRIDGE-V2 · 终版 100k 全预算 · 并读 FVD 45.08 · 真实机器人</div>
   <h2>真实域：背景稳定，运动区仍是主要失效</h2>
+  <p>本节片段同样以更深的去噪设置重制（每 chunk 2 → 8 次更新）：<b>PSNR 26.44 → 26.93、LPIPS 0.0668 → 0.0628</b>。⚠️ 该域三个指标不一致——FVD 在 237.0 / 232.1 / 237.0 之间基本持平且在 24 集下可能是噪声，取 8 步是<b>基于两列单调改善的判断，不是测量</b>。</p>
   <div class="grid" data-dom="bridge_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
 </section>
 
@@ -132,13 +135,14 @@
 </section>
 
 <section id="longform">
-  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 296.0</div>
+  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 283.5</div>
   <h2>长时程流式：真机 17 秒，且快于实时</h2>
   <p>rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
   <div class="grid" data-dom="longform_droid" data-n="4" data-idx="0000,0002,0005,0011"></div>
   <div class="scroll"><table>
     <tr><th>DROID 253 帧 · 24 集 · 协议逐项一致</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
-    <tr><td><b>本页展示：stage-2 终版 + 正确采样设置</b></td><td class="n win">19.68</td><td class="n win">0.1368</td><td class="n win">296.0</td></tr>
+    <tr><td><b>本页展示：stage-2 终版 + 最优采样设置（6→12 步）</b></td><td class="n win">19.61</td><td class="n win">0.1363</td><td class="n win">283.5</td></tr>
+    <tr><td>同一模型，6 步</td><td class="n">19.68</td><td class="n">0.1368</td><td class="n">296.0</td></tr>
     <tr><td>stage-2a（中间段）</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
     <tr><td>stage-1 终点</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
     <tr><td>此前展示的检查点</td><td class="n">19.70</td><td class="n">0.1443</td><td class="n">338.5</td></tr>
