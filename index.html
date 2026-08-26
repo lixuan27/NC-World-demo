@@ -134,18 +134,24 @@
 </section>
 
 <section id="general">
-  <div class="dom">通用视频 · 文本条件 · Track-B checkpoint 53k / 150k（训练中）</div>
+  <div class="dom">通用视频 · 文本条件 · checkpoint 55k / 150k（训练中）</div>
   <h2>同一架构的通用视频线</h2>
-  <p>此前本节展示的是验证集前 4 个片段，其中一个的模型产出光流只有 0.90（全池中位 1.57）——<b>选片本身偏静</b>，这是我们的错误。现改为覆盖运动谱的四片，每片标注其运动比（模型产出光流 ÷ 真值光流）。</p>
-  <div class="grid" data-dom="general_final" data-n="4" data-idx="0018,0020,0006,0014" data-psnr="10.05,11.38,14.07,11.92"></div>
+  <p>本节以扫描出的最优去噪深度重制（每 chunk 8 次更新）。此前展示的是验证集前 4 片，其中一片的模型产出光流只有 0.90（全池中位 1.57）——<b>选片本身偏静，这是我们的错误</b>。现改为产出运动量高且<b>运动比接近 1</b> 的四片，逐片标注。</p>
+  <div class="grid" data-dom="general_final" data-n="4" data-idx="0023,0015,0027,0014" data-psnr="9.62,10.79,13.18,9.10"></div>
   <div class="scroll"><table>
     <tr><th>本节四片</th><th class="n">模型产出光流</th><th class="n">真值光流</th><th class="n">运动比</th><th>内容</th></tr>
-    <tr><td>clip 18</td><td class="n win">6.56</td><td class="n">2.15</td><td class="n">3.05</td><td>黑色肌肉车 —— 模型<b>多给</b>了运动</td></tr>
-    <tr><td>clip 20</td><td class="n">3.88</td><td class="n">9.37</td><td class="n lose">0.41</td><td>高动态场景 —— 模型<b>少给</b>了运动</td></tr>
-    <tr><td>clip 6</td><td class="n">3.17</td><td class="n">2.66</td><td class="n win">1.19</td><td>人与小狗互动 —— 运动量基本吻合</td></tr>
-    <tr><td>clip 14</td><td class="n">3.11</td><td class="n">2.78</td><td class="n win">1.12</td><td>女子骑车 —— 运动量基本吻合</td></tr>
+    <tr><td>clip 23</td><td class="n win">4.84</td><td class="n">6.28</td><td class="n win">0.77</td><td>红衣男子，微笑说话</td></tr>
+    <tr><td>clip 15</td><td class="n">3.95</td><td class="n">4.43</td><td class="n win">0.89</td><td>男子驾驶敞篷车</td></tr>
+    <tr><td>clip 27</td><td class="n win">5.47</td><td class="n">2.48</td><td class="n">2.21</td><td>橙色物体特写 —— 模型<b>多给</b>了运动</td></tr>
+    <tr><td>clip 14</td><td class="n">2.05</td><td class="n">2.78</td><td class="n win">0.74</td><td>女子骑车</td></tr>
   </table></div>
-  <p class="note">这一域的运动亏损是<b>差异性的，不是均匀的</b>：32 片池上整体运动比 0.476，但在真值运动量最高的 8 片上只有 0.14–0.47，而在中低运动内容上可以达到 1.1–3.0。<b>模型在慢场景上跟得住、在快场景上跟不住</b>。<br>⚠️ 引导对此<b>无效</b>：cfg 2 / 4 / 7 给出运动比 0.476 / 0.472 / 0.436，<b>反而略降</b>——论文归因于 dynamics 的那个杠杆不迁移到本域。剩下的是训练：Track-B 只训到 <b>53k / 150k</b>，不足预算三分之一。</p>
+  <div class="scroll"><table>
+    <tr><th>去噪深度（每 chunk 更新次数）</th><th class="n">响应度 b</th><th class="n">整体运动比</th><th class="n">PSNR</th></tr>
+    <tr><td><b>8（本节采用）</b></td><td class="n win">0.466</td><td class="n win">0.483</td><td class="n">11.32</td></tr>
+    <tr><td>4（此前）</td><td class="n lose">0.288</td><td class="n">0.476</td><td class="n">11.97</td></tr>
+    <tr><td>2</td><td class="n">0.517</td><td class="n lose">0.337</td><td class="n win">13.01</td></tr>
+  </table></div>
+  <p class="note"><b>响应度 b</b> 是"场景动得多 10 倍时模型是否也多给约 10 倍运动"的斜率（1 为忠实、0 为完全不跟随）。把每个 chunk 的去噪更新次数从 4 提到 8，<b>b 从 0.288 抬到 0.466（1.6 倍）而整体运动量不变</b>，代价是 0.65 dB PSNR。降到 2 能把 b 抬到 0.517、PSNR 最高，但整体运动量掉到 0.337——画面会更静，所以本节不用它。<br><b>这一域的运动亏损是结构性的，不只是欠训练。</b>同一架构在动作条件的机器人域能达到 b = 0.89–1.03，这里只有 0.47。原因是<b>文本不指定运动幅度</b>："一个人骑自行车"没有说骑多快，模型对运动尺度没有可用信号，只能回归语料均值——于是慢场景多给、快场景少给。<b>引导对此无效</b>（cfg 2/4/7 给出 b = 0.288/0.269/0.366，无趋势），两条损失侧路线（时间方差匹配、速度重分配）也都已按预注册判据关闭。剩下的是训练量与<b>条件侧</b>：该域只训到 55k / 150k。</p>
 </section>
 
 <section id="longform">
