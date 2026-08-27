@@ -63,7 +63,7 @@
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
   <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
-    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="STAGE_REPORT_2026-08-27.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
+    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#charts">📊 图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
   </nav>
 </header>
 
@@ -202,6 +202,40 @@
     <tr><td>余量使用率</td><td class="n" colspan="3">PSNR 用掉 <b>56%</b> · LPIPS 差 <b>14 倍</b></td></tr>
   </table></div>
   <p class="note">上限在 21 帧处是 36.21 dB、253 帧处 35.38 dB，<b>只掉 0.83 dB</b>——自编码器的损失是空间性的，不随时长累积。所以剩下的伪影<b>不是编解码造成的</b>，中间那一路视频肉眼也证实了这点：往返画面干净，生成画面在机械臂处仍有明显失真。余量还有 44%，这正是规模研究要去拿的部分。</p>
+</section>
+
+<section id="charts">
+  <div class="dom">CHARTS · 全部由结果 JSON 直接渲染</div>
+  <h2>量化结果</h2>
+  <p>下列每张图都由一个 fail-closed 的脚本从存档的结果 JSON 直接生成，任一输入缺失即整体不出图；没有任何数字是手抄进作图代码的——手抄的图会与它旁边的表悄悄不一致。</p>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_coread.png" alt="外部并读：同 split、同度量实现、附冻结帧地板" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">外部并读：同 split、同度量实现、附冻结帧地板</b><br>Bridge-V2 与 Language-Table 明显领先两个公开基线；RT-1 是唯一负格，如实列出。注意每域都画了冻结帧地板——一个全程静止的基线能拿到什么分数，是判断该指标可不可用的前提。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_causal.png" alt="因果性是 diffusion forcing 可用的前提" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">因果性是 diffusion forcing 可用的前提</b><br>三臂全部从随机初始化、同数据同步数同协议。DF 加在双向骨干上比不加还差 2.8 倍；换成 block-causal 后同配方好 6.4 倍。右图的响应度 b 是「场景动得多 10 倍时模型是否也多给约 10 倍运动」的斜率，双向+DF 那一臂 b≈0 意味着输出运动与场景运动零相关。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_drift.png" alt="253 帧长 rollout：预算花在哪里" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">253 帧长 rollout：预算花在哪里</b><br>PSNR 在前 50 帧从 28.3 掉到 19.5，之后 200 帧只再掉 1.6 dB。**损失是前置的，不是累积的** —— 攻长时程质量该攻头两秒。虚线是自编码器往返上限 35.38 dB，我们只用掉 56% 的可用余量。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_curriculum.png" alt="长上下文课程买到了什么" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">长上下文课程买到了什么</b><br>45→125→253 帧窗口，FVD 单调改善 42% 而 PSNR 基本持平。课程买到的是分布层面的长时程一致性，不是逐帧锐度。三格采样设置完全一致。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_guidance.png" alt="引导强度有内部最优" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">引导强度有内部最优</b><br>五档扫描，1.5 是真正的极小值。此前全项目默认取 2，且从未在机器人域扫过。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_sampler.png" alt="两个旋钮乘积相同、方向相反" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">两个旋钮乘积相同、方向相反</b><br>在飞 chunk 数与每 chunk 更新次数的乘积就是常说的「采样步数」，但前者从 3 提到 8 使 FVD 崩 2.45 倍，后者增加反而更好。合称「深度」会把两件事混为一谈。</figcaption>
+  </figure>
+  <figure style="margin:0 0 26px">
+    <img src="figs/fig_responsiveness.png" alt="更粗的因果提交粒度买到运动响应度" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">更粗的因果提交粒度买到运动响应度</b><br>同一 block-causal 骨干下，提交粒度 Δt_c 从 0.27s 放到 1.07s，b 从 0.46 升到 0.89；两个双向对照远低于任何因果臂。粒度因此是设计轴而非自由参数——粗粒度换来响应度，代价是 +23% FVD。</figcaption>
+  </figure>
 </section>
 
 <section id="floors">
