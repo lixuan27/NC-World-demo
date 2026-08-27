@@ -5,18 +5,30 @@
 #
 # Each demo ships as a TRIPLE -- the generated video, the ground-truth video it
 # is paired against, and the conditioning the model was given (the real action
-# array for the robot domains, the caption for general video). A generated clip
-# shown without both of those cannot be judged, which is the whole reason the
-# bundle is assembled rather than the videos being copied loose.
+# array). A generated clip shown without both of those cannot be judged, which
+# is the whole reason the bundle is assembled rather than the videos copied
+# loose.
+#
+# `files.txt` is the COMPLETE definition of the bundle, not an add-list. This
+# script therefore also REMOVES files it previously wrote that the manifest no
+# longer names. That matters here: the bundle has already been revised three
+# times (the general-video clips were replaced once, then the whole domain was
+# dropped), and an add-only fetch leaves every superseded revision lying in the
+# target directory looking exactly as authoritative as the current one.
+#
+# ⚠️ It only ever deletes paths recorded in `.ncw-bundle-manifest`, which this
+# script writes. Anything else in the target directory -- including files you
+# put there yourself -- is never touched. "Delete only what we wrote" is the
+# rule; a fetch script that prunes by pattern would eventually eat something it
+# did not create.
 set -euo pipefail
 DEST="${1:-/Users/lixuan/Desktop/NC-World}"
 BASE="https://raw.githubusercontent.com/lixuan27/NC-World-demo/main/bundle"
+STATE=".ncw-bundle-manifest"
 
 echo "目标目录: $DEST"
 mkdir -p "$DEST"
 
-# The file list lives beside this script so the two can never disagree about
-# what the bundle contains.
 LIST="$(mktemp)"
 trap 'rm -f "$LIST"' EXIT
 curl -fsSL "$BASE/files.txt" -o "$LIST"
@@ -41,9 +53,34 @@ done < "$LIST"
 echo
 if [ "$FAILED" -ne 0 ]; then
   # A partial bundle is worse than no bundle: the missing file is usually a
-  # ground truth or a condition, and what is left looks complete.
-  echo "⚠️ $FAILED/$TOTAL 个文件未取到 -- 包不完整，重跑本脚本（curl 会覆盖已有文件）"
+  # ground truth or a condition, and what is left looks complete. Do NOT prune
+  # after a partial fetch -- a failed download must not be able to trigger a
+  # delete.
+  echo "⚠️ $FAILED/$TOTAL 个文件未取到 -- 包不完整，**已跳过清理**"
+  echo "   重跑本脚本（curl 会覆盖已有文件）"
   exit 1
 fi
+
+# ---- prune: only paths this script wrote before, absent from the new manifest
+PRUNED=0
+if [ -f "$DEST/$STATE" ]; then
+  while IFS= read -r old; do
+    [ -z "$old" ] && continue
+    if ! grep -Fxq "$old" "$LIST"; then
+      if [ -e "$DEST/$old" ]; then
+        rm -f "$DEST/$old"
+        echo "  已清理（清单外的旧版本）: $old"
+        PRUNED=$((PRUNED + 1))
+      fi
+    fi
+  done < "$DEST/$STATE"
+  # drop directories that the pruning emptied, never a non-empty one
+  find "$DEST" -mindepth 1 -type d -empty -delete 2>/dev/null || true
+fi
+
+cp "$LIST" "$DEST/$STATE"
+
+echo
 echo "✅ $TOTAL 个文件已放入 $DEST"
+[ "$PRUNED" -gt 0 ] && echo "   清理了 $PRUNED 个已被取代的旧文件"
 echo "   先读 $DEST/README.md"
