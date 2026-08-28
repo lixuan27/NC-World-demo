@@ -123,3 +123,31 @@ python -m ncworld.evaluate --ckpt checkpoints/b_s2b/last.pt \
 贴到 B 片的视频上，而那种错误从外观上看不出来。
 
 完整在线版（含并排对照、消融与漂移曲线）：<https://lixuan27.github.io/NC-World-demo/>
+
+---
+
+## `figures/` — 八张结果图（英文 · 莫兰迪配色 · 衬线体）
+
+| 文件 | 内容 |
+|---|---|
+| `fig1_causal_vs_bidirectional` | 核心受控结果：三臂全部随机初始化、同数据、同 7500 步、同评测协议，唯一变量是注意力掩码与噪声调度 |
+| `fig2_external_benchmarks` | Bridge-V2 / Language-Table / RT-1 对两个公开基线，每域附冻结画面地板 |
+| `fig3_curriculum_and_guidance` | 训练窗口 45 → 125 → 253 帧，以及引导强度扫描 |
+| `fig4_drift_and_ceiling` | 253 帧连续生成的逐段 PSNR 对自编码器天花板 |
+| `fig5_sampler_two_knobs` | 流水线宽度与去噪深度方向相反 |
+| `fig6_ablation_and_headroom` | 两项训练侧对齐的价值，以及还剩多少余量 |
+| `fig7_commit_granularity` | 提交粒度增大时保真度与可控性的权衡 |
+| `fig8_action_dependence` | 打乱动作后的损失上升幅度，逐域 |
+
+PNG 用于幻灯片，PDF 是矢量、用于论文。
+
+## `tables/` — Quantitative results
+
+`quantitative_results.html` 浏览器直接打开，跟随系统亮/暗主题。`.md` 便于编辑器阅读，
+`.tex` 可直接贴进论文。
+
+**三张表刻意不合并。** 外部基准、因果对照、设计消融三者在数据域、时长和片段数上都不同，
+而 FVD 只在片段数相同时可比——合成一张表会呈现一个从未做过的比较。
+
+每个数字都由脚本从存档的评测 JSON 直读（`scripts/quant_table.py`、`scripts/figs_en.py`），
+任一输入缺失即整体不出图不出表。除坐标轴文字外没有任何数字是手抄进作图代码的。

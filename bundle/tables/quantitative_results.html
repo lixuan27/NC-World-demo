@@ -1,0 +1,90 @@
+<style>
+:root{--bg:#FBF9F7;--ink:#4A4E4D;--mut:#8A8580;--rule:#D3C6B8;--blue:#6E7F98;
+      --clay:#A87B58;--sage:#7E9469;--stone:#A8A29E}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:44px 22px 76px;
+     font:16px/1.62 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,
+     "Liberation Serif","Times New Roman",serif}
+.wrap{max-width:940px;margin:0 auto}
+h1{font-size:27px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--mut);font-size:14.5px;max-width:74ch;margin:0 0 34px}
+h2{font-size:18px;font-weight:600;margin:44px 0 3px;letter-spacing:-.005em}
+.cap{color:var(--mut);font-size:13px;max-width:82ch;margin:0 0 13px}
+.sc{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14px;
+      font-variant-numeric:tabular-nums lining-nums}
+thead th{font-weight:600;font-size:12.5px;letter-spacing:.03em;color:var(--mut);
+         text-align:right;padding:7px 11px;border-bottom:1.4px solid var(--ink);
+         white-space:nowrap}
+thead th:first-child,tbody td:first-child,tbody th{text-align:left}
+tbody td,tbody th{padding:6.5px 11px;text-align:right;border-bottom:1px solid var(--rule);
+                  font-weight:400}
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:1.4px solid var(--ink)}
+.grp td{border-bottom:none;padding-top:15px;padding-bottom:3px;
+        color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase}
+.best{font-weight:700;color:var(--ink)}
+.floor{color:var(--stone);font-style:italic}
+.ours{color:var(--blue);font-weight:600}
+.na{color:var(--stone)}
+.note{color:var(--mut);font-size:12.5px;max-width:84ch;margin:11px 0 0;
+      padding-left:15px;border-left:2px solid var(--rule)}
+footer{margin-top:58px;padding-top:17px;border-top:1px solid var(--rule);
+       color:var(--mut);font-size:12.5px;max-width:84ch}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1C1B19;--ink:#E6E1DA;--mut:#9A938A;--rule:#3A3733;
+  --blue:#93A5BE;--clay:#C99C77;--sage:#9DB587;--stone:#6E6862}}
+:root[data-theme="dark"]{--bg:#1C1B19;--ink:#E6E1DA;--mut:#9A938A;--rule:#3A3733;
+  --blue:#93A5BE;--clay:#C99C77;--sage:#9DB587;--stone:#6E6862}
+</style>
+<div class="wrap">
+<h1>NC-World: Quantitative Results</h1>
+<p class="sub">A block-causal video world model trained from random initialisation for streaming rollout. Every number below is read directly from a stored evaluation artefact. The three tables are kept separate because their rows are not mutually comparable: merging them would present a comparison that was never run.</p>
+<h2>1. External benchmarks</h2>
+<p class="cap">Official validation splits with zero training overlap, 8-frame action-conditioned continuation, 512 clips, one shared FVD implementation. Implementation agreement has to be stated: the same metric name differs by 3&ndash;4&times; across public codebases. The static-frame row is a baseline that outputs the conditioning frame forever; a metric it scores well on cannot support a claim about motion.</p>
+<div class="sc"><table><thead><tr>
+<th>Method</th><th>Bridge-V2</th><th>Language-Table</th><th>RT-1</th>
+</tr><tr><th></th>
+<th>FVD &darr;</th>
+<th>FVD &darr;</th>
+<th>FVD &darr;</th>
+</tr></thead><tbody>
+<tr class="floor"><th>Static frame (do-nothing floor)</th><td class="floor">238.70</td><td class="floor">167.31</td><td class="floor">459.53</td></tr>
+<tr><th>IRASim</th><td class="">91.60</td><td class="">60.05</td><td class="">&mdash;</td></tr>
+<tr><th>DriftWorld</th><td class="">101.20</td><td class="">39.09</td><td class="best">68.72</td></tr>
+<tr><th class="ours">Ours (from scratch)</th><td class="ours best">45.08</td><td class="ours best">37.97</td><td class="ours">79.47</td></tr>
+</tbody></table></div>
+<p class="note">RT-1 is our one negative cell and we report the final training checkpoint rather than the best one. Its FVD rises monotonically with training (69.32 at 10k, 76.32 at 20k, 79.47 at 30k) while LPIPS stays flat, so this is late-training distributional degradation, not an insufficient budget; at 10k it is within 0.9% of DriftWorld. On Bridge-V2 the static-frame baseline reaches SSIM 0.8821 against our 0.8754 &mdash; a model that never moves wins that column, which is why we do not quote SSIM in support of any motion claim on this domain.</p>
+<h2>2. Causal versus bidirectional attention</h2>
+<p class="cap">Our strongest controlled evidence. All three arms start from random initialisation, see the same data for the same 7500 steps, and are scored under a byte-identical protocol (32 clips, guidance 1.0, 8 updates per chunk, 1 chunk in flight, cache 4). The only variable is the attention mask and the noise schedule. <i>b</i> is the log-log slope of predicted motion against true motion: 1 is faithful, 0 means the output moves by an amount unrelated to how much the scene actually moved.</p>
+<div class="sc"><table><thead><tr><th>Attention</th><th>Noise level</th><th>FVD &darr;</th><th>PSNR &uarr;</th><th>SSIM &uarr;</th><th>LPIPS &darr;</th><th><i>b</i> &uarr;</th></tr></thead><tbody>
+<tr><th>Bidirectional</th><td>shared</td><td class="">1566.27</td><td class="">21.74</td><td class="">0.7970</td><td class="">0.1292</td><td class="">0.392</td></tr>
+<tr><th>Bidirectional</th><td>per-chunk</td><td class="">4454.38</td><td class="">12.72</td><td class="">0.3427</td><td class="">0.5545</td><td class="">-0.006</td></tr>
+<tr><th class=ours>Block-causal (ours)</th><td>per-chunk</td><td class="best">690.81</td><td class="">23.79</td><td class="">0.8599</td><td class="">0.0772</td><td class="best">0.610</td></tr>
+</tbody></table></div>
+<p class="note">Read the first two rows against each other. Assigning each chunk its own noise level is meant to teach the model to denoise a noisy future given a cleaner past, which is exactly the streaming situation. On a bidirectional backbone it makes things <b>0.4&times; worse than not doing it at all</b>, because bidirectional attention lets the clean and noisy chunks see each other and the asymmetry the loss was meant to teach never arises. Switching the mask to block-causal makes the same recipe 2.3&times; better. Causality is not the price paid for streaming; it is the precondition that makes this training signal mean anything.</p>
+<h2>3. Design ablations</h2>
+<p class="cap">Our model only. Within each block every sampler setting is held fixed and one factor is varied, so rows are comparable down a block but not across blocks (blocks differ in domain, horizon and clip count, and FVD is only comparable at equal clip count).</p>
+<div class="sc"><table><thead><tr><th>Factor</th><th>FVD &darr;</th><th>PSNR &uarr;</th><th>SSIM &uarr;</th><th>LPIPS &darr;</th></tr></thead><tbody>
+<tr class="grp"><td colspan="5">Training context length (frames)</td></tr>
+<tr><th>45</th><td class="">513.91</td><td class="">19.64</td><td class="">0.7873</td><td class="">0.1520</td></tr>
+<tr><th>125</th><td class="">350.47</td><td class="">19.54</td><td class="">0.7770</td><td class="">0.1435</td></tr>
+<tr><th>253</th><td class="best">296.01</td><td class="">19.68</td><td class="">0.7797</td><td class="">0.1368</td></tr>
+<tr class="grp"><td colspan="5">Self-generated history + inference-matched noise</td></tr>
+<tr><th>both on</th><td class="best">283.46</td><td class="">19.61</td><td class="">0.7777</td><td class="">0.1363</td></tr>
+<tr><th>both off</th><td class="">629.93</td><td class="">16.91</td><td class="">0.6978</td><td class="">0.2335</td></tr>
+<tr class="grp"><td colspan="5">Chunks in flight</td></tr>
+<tr><th>3</th><td class="best">296.01</td><td class="">19.68</td><td class="">0.7797</td><td class="">0.1368</td></tr>
+<tr><th>8</th><td class="">724.54</td><td class="">16.35</td><td class="">0.5820</td><td class="">0.2298</td></tr>
+<tr class="grp"><td colspan="5">Denoising updates per chunk</td></tr>
+<tr><th>2</th><td class="">64.33</td><td class="">31.50</td><td class="">0.9610</td><td class="">0.0228</td></tr>
+<tr><th>4</th><td class="">59.34</td><td class="">34.12</td><td class="">0.9706</td><td class="">0.0188</td></tr>
+<tr><th>8</th><td class="best">56.52</td><td class="">33.99</td><td class="">0.9697</td><td class="">0.0190</td></tr>
+<tr class="grp"><td colspan="5">Guidance scale</td></tr>
+<tr><th>1.0</th><td class="">317.19</td><td class="">19.78</td><td class="">0.7863</td><td class="">0.1328</td></tr>
+<tr><th>1.25</th><td class="">289.79</td><td class="">19.76</td><td class="">0.7849</td><td class="">0.1325</td></tr>
+<tr><th>1.5</th><td class="best">274.85</td><td class="">19.71</td><td class="">0.7827</td><td class="">0.1337</td></tr>
+<tr><th>2.0</th><td class="">283.46</td><td class="">19.61</td><td class="">0.7777</td><td class="">0.1363</td></tr>
+<tr><th>3.0</th><td class="">337.78</td><td class="">19.36</td><td class="">0.7623</td><td class="">0.1458</td></tr>
+</tbody></table></div>
+<p class="note">Two results here are worth stating outright. Longer training context improves FVD by 42% while PSNR stays flat, so the curriculum buys distributional consistency over long horizons rather than per-frame sharpness. And the two sampler knobs move in <i>opposite</i> directions even though their product is what is usually reported as the step count: widening the pipeline costs 2.45&times; while deepening the denoising helps by 12%. Widening the pipeline means a chunk is committed while the neighbours it depends on are still noisier, which changes the noise level of the history rather than the amount of compute spent.</p>
+<footer>Autoencoder ceiling: ground-truth video passed through the same frozen codec and scored as if generated reaches 35.38 dB at 253 frames against 36.21 dB at 21 frames &mdash; a drop of only 0.83 dB, so codec loss is spatial and does not compound with horizon. Our best model is 19.71 dB, using 56% of the available headroom &mdash; the remaining long-horizon artefacts are ours, not the codec's.</footer></div>

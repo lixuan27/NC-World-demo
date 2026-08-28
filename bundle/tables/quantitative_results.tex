@@ -1,0 +1,30 @@
+% Table 1: external benchmarks
+\begin{table}[t]\centering
+\caption{External benchmarks. Official validation splits, 8-frame action-conditioned continuation, 512 clips, one shared FVD implementation. The static-frame row outputs the conditioning frame forever.}
+\begin{tabular}{lccc}
+\toprule
+Method & Bridge-V2 & Language-Table & RT-1 \\
+ & FVD $\downarrow$ & FVD $\downarrow$ & FVD $\downarrow$ \\
+\midrule
+\textit{Static frame (floor)} & \textit{238.70} & \textit{167.31} & \textit{459.53} \\
+IRASim & 91.60 & 60.05 & -- \\
+DriftWorld & 101.20 & 39.09 & \textbf{68.72} \\
+\midrule
+\textbf{Ours} (from scratch) & \textbf{45.08} & \textbf{37.97} & 79.47 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Table 2: causal vs bidirectional
+\begin{table}[t]\centering
+\caption{Causal versus bidirectional attention. All arms from random initialisation, same data, same 7500 steps, byte-identical scoring protocol; the only variable is the attention mask and noise schedule. $b$ is the log-log slope of predicted motion on true motion.}
+\begin{tabular}{llccccc}
+\toprule
+Attention & Noise & FVD $\downarrow$ & PSNR $\uparrow$ & SSIM $\uparrow$ & LPIPS $\downarrow$ & $b$ $\uparrow$ \\
+\midrule
+Bidirectional & shared & 1566.27 & 21.74 & 0.7970 & 0.1292 & 0.392 \\
+Bidirectional & per-chunk & 4454.38 & 12.72 & 0.3427 & 0.5545 & -0.006 \\
+Block-causal \textbf{(ours)} & per-chunk & \textbf{690.81} & 23.79 & 0.8599 & 0.0772 & 0.610 \\
+\bottomrule
+\end{tabular}
+\end{table}
