@@ -61,6 +61,36 @@ if [ "$FAILED" -ne 0 ]; then
   exit 1
 fi
 
+# ---- adopt the pre-manifest revisions ---------------------------------------
+# The manifest only knows what a manifest-aware fetch wrote. Everything written
+# by the earlier add-only versions of this script is therefore invisible to the
+# prune below and survives forever -- which is not a rounding error, because the
+# files that predate the manifest are exactly the ones that were superseded. The
+# 14 paths listed here are the union of every `general/` entry across all
+# historical versions of files.txt (`git log -- bundle/files.txt`), i.e. the
+# complete set this script could ever have written under that prefix. They are
+# the retracted general-video demos: selected by a motion metric, they all
+# disintegrate around frame 40, and disintegration itself produces large optical
+# flow, so the metric scored the worst clips highest.
+#
+# Enumerated on purpose. The alternative -- prune anything not named in
+# files.txt -- would also delete files you put in this directory yourself, and
+# no manifest bug is worth trading that rule away for.
+LEGACY="general/clip01_generated.mp4 general/clip01_groundtruth.mp4
+general/clip03_generated.mp4 general/clip03_groundtruth.mp4
+general/clip15_generated.mp4 general/clip15_groundtruth.mp4
+general/clip17_generated.mp4 general/clip17_groundtruth.mp4
+general/clip20_generated.mp4 general/clip20_groundtruth.mp4
+general/clip23_generated.mp4 general/clip23_groundtruth.mp4
+general/clip25_generated.mp4 general/clip25_groundtruth.mp4"
+for old in $LEGACY; do
+  # never adopt a path the current manifest still names -- if `general/` ever
+  # comes back, this list must not be able to delete the live copy
+  grep -Fxq "$old" "$LIST" && continue
+  [ -e "$DEST/$old" ] || continue
+  grep -Fxq "$old" "$DEST/$STATE" 2>/dev/null || echo "$old" >> "$DEST/$STATE"
+done
+
 # ---- prune: only paths this script wrote before, absent from the new manifest
 PRUNED=0
 if [ -f "$DEST/$STATE" ]; then
