@@ -63,9 +63,23 @@
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
   <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
-    <a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#charts">📊 图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
+    <a href="#idea">💡 核心问题</a><a href="CORE_IDEA.md">📖 完整论述</a><a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#charts">📊 图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
   </nav>
 </header>
+
+<section id="idea">
+  <div class="dom">THE QUESTION · 一句话主线</div>
+  <h2>流式世界模型到底以什么为条件？</h2>
+  <p>生成时，模型每一步依赖的历史有三个属性：<b>它是模型自己上一刻生成的</b>（不是真值）、<b>它已写进缓存永不可改</b>（错误无法回头修正）、<b>它处在采样器决定的特定噪声水平上</b>（不由训练分布决定）。而标准视频训练给的历史，在这三点上都不是那个东西：它是数据集真值、可被后续注意力改写、噪声水平随机采样。</p>
+  <p><b>训练与推理的上下文不匹配</b>和<b>闭环误差累积</b>是同一件事的两面：误差之所以累积，是因为模型从未学过如何在自己犯过错的历史上继续正确演化。本项目把这条落差拆成三个可以逐项消融的坐标，每一项单独测价。</p>
+  <div class="scroll"><table>
+    <tr><th>推理历史的属性</th><th>标准训练给的</th><th>我们的对齐动作</th><th class="n">实测价值</th></tr>
+    <tr><td>信息只能单向流动</td><td>双向注意力可改写过去</td><td>块状因果注意力</td><td class="n win">6.4×</td></tr>
+    <tr><td>历史由模型自产</td><td>数据集真值</td><td>训练中让模型真的自生成前几个片段，损失取在更后面</td><td class="n win" rowspan="2">2.2×</td></tr>
+    <tr><td>噪声水平由采样器决定</td><td>在所有合法组合上均匀采样</td><td>直接从推理那一族噪声阶梯采样</td></tr>
+  </table></div>
+  <p class="note"><b>最锋利的一条证据。</b>近年给不同片段分配独立噪声强度的做法，用意是让模型学会在较干净的过去条件下去噪较脏的未来。但这个用意<b>在双向注意力上根本无法实现</b>——双向允许干净块与噪声块互相看见，那个本该被学会的不对称从未发生，损失在教一件模型推理时永远遇不到的事。单变量实验（全部从随机初始化、同数据同步数同协议）：双向 + 独立噪声 <b>FVD 4454</b>，而同一双向骨干退回整段共用噪声反而是 <b>1566</b>，<b>加上去比不加还差 2.8 倍</b>；换成块状因果后同配方 <b>691</b>。<br>⇒ <b>因果性不是为流式付出的质量代价，它是让这套训练信号有意义的前提。</b>完整论述见 <a href="CORE_IDEA.md">CORE_IDEA.md</a>。</p>
+</section>
 
 <section id="board">
   <div class="dom">RESULTS · 2026-08-26</div>
