@@ -63,7 +63,7 @@
   <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
   <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
   <nav>
-    <a href="#idea">💡 核心问题</a><a href="CORE_IDEA.md">📖 完整论述</a><a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#charts">📊 图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
+    <a href="#idea">💡 核心问题</a><a href="CORE_IDEA.md">📖 完整论述</a><a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#figs">📈 可视化</a><a href="EVIDENCE_TABLES.md">📋 数据表</a><a href="#charts">📊 早期图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
   </nav>
 </header>
 
@@ -97,7 +97,7 @@
   <h2 style="margin-top:26px">绝对面板与系统能力</h2>
   <div class="scroll"><table>
     <tr><th>项</th><th class="n">数值</th><th>说明</th></tr>
-    <tr><td>受控双向对照（同代码同参同 clip）</td><td class="n win">FVD 229.5 vs 1087</td><td>PSNR 21.47/17.73 · SSIM 0.819/0.644 · LPIPS 0.110/0.240，四项全胜</td></tr>
+    <tr><td>因果 vs 双向 <span class="chip">受控单变量</span></td><td class="n win">FVD 690.8 vs 4454.4</td><td>见下方「因果 vs 双向」节。三臂协议逐字段相同（7500 步 · 32 片 · cfg 1.0 · ar 8 · inflight 1 · cache 4），唯一变量是注意力掩码与噪声调度</td></tr>
     <tr><td>LIBERO 终版 100k（49 帧 · <b>48 集 · 2 步去噪</b>）</td><td class="n">PSNR 33.59 · FVD 56.87</td><td>较 20k 全指标改善，长时程受益更大（f49 +1.45 dB vs f25 +1.06）。⚠️ 该行为 <b>48 集</b>协议，与下方 LIBERO 节的 <b>24 集</b>数字<b>不可比</b>（FVD 仅在同 clip 数下可比）；其采样深度也是旧的 2 步。</td></tr>
     <tr><td>流式吞吐（真机域，生产配置）</td><td class="n win">48.6 fps</td><td>3.24× 实时；首帧延迟 188 ms（双向模型 5.6 s）</td></tr>
     <tr><td>在线重规划</td><td class="n">省算 36–74%</td><td>输出与全量重算 bit-exact（16/16）</td></tr>
@@ -216,6 +216,44 @@
     <tr><td>余量使用率</td><td class="n" colspan="3">PSNR 用掉 <b>56%</b> · LPIPS 差 <b>14 倍</b></td></tr>
   </table></div>
   <p class="note">上限在 21 帧处是 36.21 dB、253 帧处 35.38 dB，<b>只掉 0.83 dB</b>——自编码器的损失是空间性的，不随时长累积。所以剩下的伪影<b>不是编解码造成的</b>，中间那一路视频肉眼也证实了这点：往返画面干净，生成画面在机械臂处仍有明显失真。余量还有 44%，这正是规模研究要去拿的部分。</p>
+</section>
+
+<section id="figs">
+  <div class="dom">FIGURES · 莫兰迪配色 · 衬线体</div>
+  <h2>可视化结果</h2>
+  <p>每张图都由一个 fail-closed 的脚本从存档的结果 JSON 直接渲染，任一输入缺失即整体不出图。除坐标轴文字外没有任何数字是手抄进作图代码的，因为手抄的图会与它旁边的表悄悄不一致。完整数据表见 <a href="EVIDENCE_TABLES.md">EVIDENCE_TABLES.md</a>，其中标明了每一行的协议以及哪些行不可跨行比较。</p>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/01_causal_vs_bidirectional.png" alt="因果 vs 双向：本项目最强的一组受控证据" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">因果 vs 双向：本项目最强的一组受控证据</b><br>三臂全部从随机初始化，同一批数据，各训 7500 步，评测协议逐字段相同（32 片 · cfg 1.0 · 每块 8 次更新 · 在飞 1 · 缓存 4），唯一变量是注意力掩码与噪声调度。逐块独立噪声加在双向骨干上比不加还差 2.8 倍；换成块状因果后同配方好 6.4 倍。右图的 b ≈ 0 意味着那一臂输出的运动量与场景实际运动量毫无关系，这是四项像素指标都反映不出来的失效。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/02_external_benchmarks.png" alt="外部基准并读" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">外部基准并读</b><br>官方验证划分、8 帧动作条件续写、512 片段、同一套度量实现。同名 FVD 跨实现可差 3 到 4 倍，故实现一致必须声明。每域都画了冻结画面地板：一个全程静止的基线能拿到什么分数，是判断该指标可不可用的前提。RT-1 是唯一负格，如实列出。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/03_curriculum_and_guidance.png" alt="长上下文课程与引导强度" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">长上下文课程与引导强度</b><br>左：训练窗口 45 → 125 → 253 帧，三格采样设置完全一致，FVD 单调改善 42% 而 PSNR 持平。课程买到的是分布层面的长时程一致性，不是逐帧锐度。右：引导强度五档扫描，1.5 是真正的内部极小值，而此前全项目默认取 2 且从未在机器人域扫过。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/04_drift_and_ceiling.png" alt="误差是前置的，不是累积的" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">误差是前置的，不是累积的</b><br>253 帧连续生成的逐段 PSNR。前 50 帧掉 8.8 dB，之后 200 帧只再掉 1.6 dB。损失主要发生在模型第一次开始依赖自己输出的那一刻，不是长时间缓慢累积。这改变了优化方向：该攻的是最初两秒。色带是尚未用掉的余量。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/05_sampler_two_knobs.png" alt="两个旋钮乘积相同、方向相反" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">两个旋钮乘积相同、方向相反</b><br>同时在飞的片段数与每片段去噪更新次数，两者相乘就是通常所说的采样步数。但在其他条件完全相同时，加宽流水线代价 2.45 倍，加深去噪反而更好。机制回到主线：加宽流水线等于让一个片段在提交时所依赖的邻居更噪，改变的是历史的噪声水平而非算力总量。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/06_ablation_and_headroom.png" alt="两项训练侧改动的价值，以及还剩多少余量" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">两项训练侧改动的价值，以及还剩多少余量</b><br>左：自生成历史与对齐噪声阶梯两项一起值 2.22 倍，采样设置逐项一致。右：把真值经同一自编码器编解码往返后打分是 35.38 dB，本模型 19.71 dB，仅用掉 56%。天花板在 21 帧与 253 帧只差 0.83 dB，说明编解码器的损失不随时长累积，长时程伪影不是它造成的。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/07_commit_granularity.png" alt="提交粒度：可控性与保真度的权衡" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">提交粒度：可控性与保真度的权衡</b><br>一次因果提交覆盖的物理时间从 0.27 秒放到 1.07 秒，响应度从 0.46 升到 0.89，代价是 FVD 增加 23%。而 0.53 秒恰好等于独立测出的动作到画面变化的延迟下限。历史变得不可撤销的那个时间量子，同时决定了可控性上限与质量最优点。</figcaption>
+  </figure>
+  <figure style="margin:0 0 30px">
+    <img src="figs_morandi/08_action_dependence.png" alt="动作依赖度：域内诊断，非跨域排名" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
+    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">动作依赖度：域内诊断，非跨域排名</b><br>打乱动作后流匹配损失上升的相对幅度。固定机位域里机械臂几乎是画面唯一变化源，天花板本就高；手持机位域的背景与光照独立于动作变化，天花板本就低。因此跨行不可直接比较。</figcaption>
+  </figure>
 </section>
 
 <section id="charts">
