@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RevealTable &middot; NC-World task and rollouts</title>
+<title>RevealTable &middot; NC-World task, rollouts and baselines</title>
 <style>
-  :root{--bg:#101418;--panel:#1A2026;--edge:#242C34;--tx:#E8EDF2;--mut:#8A97A3;--acc:#4FC3A1}
+  :root{--bg:#101418;--panel:#1A2026;--edge:#242C34;--tx:#E8EDF2;--mut:#8A97A3;--acc:#4FC3A1;--bad:#E0736B}
   *{box-sizing:border-box}
   body{background:var(--bg);color:var(--tx);margin:0;padding:0 20px 72px;
     font:16px/1.6 "Avenir Next","Helvetica Neue",system-ui,sans-serif}
@@ -27,8 +27,13 @@
   .take{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px;margin:0}
   .take video{width:100%;display:block;border-radius:6px;background:#000}
   figcaption{display:flex;flex-direction:column;gap:3px;margin-top:9px}
-  .lab{font:600 10px/1 "SF Mono","Cascadia Code",Consolas,monospace;letter-spacing:.08em;
+  .lab{font:600 10px/1.4 "SF Mono","Cascadia Code",Consolas,monospace;letter-spacing:.08em;
     color:var(--acc);text-transform:uppercase}
+  .chip{border-radius:999px;padding:2px 7px;margin-left:6px;font-size:9.5px;letter-spacing:.06em;
+    border:1px solid var(--edge)}
+  .chip.ours{color:var(--acc);border-color:var(--acc)}
+  .chip.failure{color:var(--bad);border-color:var(--bad)}
+  .chip.baseline{color:var(--mut)}
   .take b{font-size:14.5px;font-weight:600}
   .txt{color:var(--tx);font-size:13px;opacity:.84}
   .meta{color:var(--mut);font-size:11.5px;font-variant-numeric:tabular-nums}
@@ -43,8 +48,8 @@
   open and stays visible, which makes it a same frame control on rendering ability. The bottom row
   keeps its lids closed, so a swap moves lids alone and the goods underneath have to be remembered.
   One action fills one chunk and therefore one causal commit, and an uncover action lifts the lids
-  of the bottom row for four of the eight frames of that chunk. This page carries the task itself
-  and the rollouts of the current models.</p>
+  of the bottom row for four of the eight frames of that chunk. This page carries the task, the
+  rollouts of our models, and the baselines they are measured against.</p>
   <nav>
     <a href="index.html">&#8592; NC-World video demos</a>
     <a href="https://github.com/lixuan27/NC-World-demo">GitHub</a>
@@ -72,7 +77,7 @@
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_d2.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">s5_d2</span><b>Adjacent transpositions, uncover every two swaps</b><span class="txt">One cell of the interval sweep, where the covered state is revealed often enough to stay inside a short cache.</span>
+      <figcaption><span class="lab">s5_d2</span><b>Adjacent transpositions, uncover every two swaps</b><span class="txt">One cell of the interval sweep, where the covered state returns to the pixels often enough to stay inside a short cache.</span>
         <span class="meta">12 chunks &middot; uncover at 2, 5, 8, 11 &middot; 85 frames &middot; 5.67 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
@@ -90,7 +95,7 @@
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_fail.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">s5_fail</span><b>Visibly failing transpositions</b><span class="txt">The action announces a swap, the lids stall and return, and the state stays where it was, so the model has to read the outcome.</span>
+      <figcaption><span class="lab">s5_fail</span><b>Visibly failing transpositions</b><span class="txt">The action announces a swap, the lids stall and return, and the state stays where it was, so the outcome has to be read from the frames.</span>
         <span class="meta">9 chunks &middot; uncover at 8 &middot; 73 frames &middot; 4.87 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
@@ -98,54 +103,72 @@
 </section>
 
 <section>
-  <div class="dom">the model</div>
-  <h2>Streaming rollouts at thirty thousand steps</h2>
-  <p>Each panel shows ground truth on the left and the streaming rollout of the model on the right,
-  produced chunk by chunk from the opening chunk and the action sequence alone, with the committed
-  cache rolling and the exponential moving average weights in force. The three arms share one
-  0.12B block causal backbone and differ in the uncover schedule they trained on and in the cache
-  window they run with.</p>
+  <div class="dom">our model</div>
+  <h2>NC-World rollouts at thirty thousand steps</h2>
+  <p>Every clip in this section comes from the same NC-World recipe on one 0.12B block causal
+  backbone, namely rectified flow with an independent noise level per chunk, committed history
+  forcing, schedule aligned noise sampling and a rolling cache with one permanent anchor. Arms
+  differ in the uncover schedule they trained on and in the cache window they run with, and
+  nothing else. Ground truth is on the left of each panel and the streaming rollout is on the
+  right, produced chunk by chunk from the opening chunk and the action sequence alone.</p>
   <div class="grid pred">
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k8mix_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep0</span><b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span>
-        <span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
+      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep0 <span class="chip ours">ours</span></span>
+        <b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span><span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
       </figcaption>
     </figure>
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k8mix_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep1</span><b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span>
-        <span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
+      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep1 <span class="chip ours">ours</span></span>
+        <b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span><span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
       </figcaption>
     </figure>
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k2mix_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep0</span><b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span>
-        <span class="meta">exact match 0.571 at interval 0 &middot; 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.000 at interval 4</span>
+      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep0 <span class="chip ours">ours</span></span>
+        <b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span><span class="meta">exact match 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.571 at interval 0 &middot; visible row 1.000</span>
       </figcaption>
     </figure>
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k2mix_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep1</span><b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span>
-        <span class="meta">exact match 0.571 at interval 0 &middot; 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.000 at interval 4</span>
+      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep1 <span class="chip ours">ours</span></span>
+        <b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span><span class="meta">exact match 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.571 at interval 0 &middot; visible row 1.000</span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="dom">baselines and failure cases</div>
+  <h2>What the same task looks like when memory or supervision is missing</h2>
+  <p>Two comparisons sit beside the rollouts above. The frozen frame baseline is the floor every
+  table in the paper carries, and it repeats the last context frame for the rest of the episode.
+  The sparse supervision arm is our own negative result, where one uncover action in nine leaves
+  that action unlearned, so the lids stay down and the covered row is undecodable.</p>
+  <div class="grid pred">
+    <figure class="take wide">
+      <video src="videos/revealtable/base_frozen_s5_mix.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">frozen_s5_mix <span class="chip baseline">baseline</span></span>
+        <b>Frozen frame, mixed uncover schedule</b><span class="txt">The baseline repeats the last context frame for the rest of the episode, so the table never moves and the lids never lift.</span><span class="meta">exact match 0.008 &middot; the predict initial floor &middot; undecodable 1.000</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/base_frozen_s5_d2.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">frozen_s5_d2 <span class="chip baseline">baseline</span></span>
+        <b>Frozen frame, uncover every two swaps</b><span class="txt">The same baseline on an episode with four uncover actions, none of which it performs.</span><span class="meta">exact match 0.008 &middot; the predict initial floor &middot; undecodable 1.000</span>
       </figcaption>
     </figure>
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k8inf_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep0</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
-        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
+      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep0 <span class="chip failure">ours, negative result</span></span>
+        <b>One uncover per episode, cache window of eight chunks</b><span class="txt">Supervision in one chunk out of nine leaves the uncover action unlearned, so the model executes it as another transposition and the lids stay down.</span><span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
       </figcaption>
     </figure>
     <figure class="take wide">
       <video src="videos/revealtable/pred_rt_k8inf_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep1</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
-        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
-      </figcaption>
-    </figure>
-    <figure class="take wide">
-      <video src="videos/revealtable/pred_rt_k8inf_ep2.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep2</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
-        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
+      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep1 <span class="chip failure">ours, negative result</span></span>
+        <b>One uncover per episode, cache window of eight chunks</b><span class="txt">Supervision in one chunk out of nine leaves the uncover action unlearned, so the model executes it as another transposition and the lids stay down.</span><span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
       </figcaption>
     </figure>
   </div>
@@ -153,7 +176,7 @@
 
 <footer>
   Rendering: canvas 320&times;240, playback 15 frames per second, task clips shown at twice their
-  native size and rollout panels at one and a half times. Readings: exact match scores the whole
+  native size and paired panels at one and a half times. Readings: exact match scores the whole
   covered permutation against chance of 0.008, per slot scores each of the five slots against
   chance of 0.200, and undecodable counts frames where the decoder declines to commit, which
   separates a failure to render from a failure to remember. Passing ground truth video through the
