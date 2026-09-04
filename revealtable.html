@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RevealTable · NC-World task demo</title>
+<title>RevealTable &middot; NC-World task and rollouts</title>
 <style>
   :root{--bg:#101418;--panel:#1A2026;--edge:#242C34;--tx:#E8EDF2;--mut:#8A97A3;--acc:#4FC3A1}
   *{box-sizing:border-box}
@@ -13,95 +13,152 @@
   header{padding:48px 0 14px;border-bottom:1px solid var(--edge)}
   h1{font-size:29px;font-weight:600;margin:0 0 6px}
   h1 em{color:var(--acc);font-style:normal}
-  .sub{color:var(--mut);max-width:76ch;margin:0 0 12px;font-size:15px}
+  .sub{color:var(--mut);max-width:78ch;margin:0 0 12px;font-size:15px}
   nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
   nav a{color:var(--acc);text-decoration:none;font-size:13px;border:1px solid var(--edge);
     border-radius:999px;padding:5px 12px;background:var(--panel)}
   nav a:hover{border-color:var(--acc)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;margin-top:28px}
+  section{margin-top:40px}
+  .dom{color:var(--acc);text-transform:uppercase;font-size:11.5px;letter-spacing:.14em;font-weight:600}
+  section>h2{font-size:19px;font-weight:600;margin:4px 0 6px}
+  section>p{color:var(--mut);font-size:14px;max-width:78ch;margin:0 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .grid.pred{grid-template-columns:repeat(auto-fill,minmax(470px,1fr))}
   .take{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px;margin:0}
   .take video{width:100%;display:block;border-radius:6px;background:#000}
   figcaption{display:flex;flex-direction:column;gap:3px;margin-top:9px}
   .lab{font:600 10px/1 "SF Mono","Cascadia Code",Consolas,monospace;letter-spacing:.08em;
     color:var(--acc);text-transform:uppercase}
   .take b{font-size:14.5px;font-weight:600}
-  .zh{color:var(--tx);font-size:13px;opacity:.86}
+  .txt{color:var(--tx);font-size:13px;opacity:.84}
   .meta{color:var(--mut);font-size:11.5px;font-variant-numeric:tabular-nums}
-  footer{color:var(--mut);font-size:12.5px;margin-top:34px;border-top:1px solid var(--edge);padding-top:14px}
+  footer{color:var(--mut);font-size:12.5px;margin-top:40px;border-top:1px solid var(--edge);padding-top:14px;max-width:88ch}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>RevealTable：<em>物体恒存性</em>任务演示</h1>
-  <p class="sub">桌面两排各五个格子。上排盖板常开，五个可区分货物全程可见，作为同帧的渲染对照；下排盖板常闭，换位时只见盖板移动。一个动作占一个块，等于一次因果提交，揭盖动作把下排盖板抬起四帧供读出。本页只放任务本身的真值视频演示，六个变体覆盖代数、揭盖密度、可见指示器与失败换位四条轴。</p>
+  <h1>RevealTable: an <em>object permanence</em> task for streaming video world models</h1>
+  <p class="sub">Two rows of five slots hold five distinguishable goods. The top row keeps its lids
+  open and stays visible, which makes it a same frame control on rendering ability. The bottom row
+  keeps its lids closed, so a swap moves lids alone and the goods underneath have to be remembered.
+  One action fills one chunk and therefore one causal commit, and an uncover action lifts the lids
+  of the bottom row for four of the eight frames of that chunk. This page carries the task itself
+  and the rollouts of the current models.</p>
   <nav>
-    <a href="index.html">&#8592; NC-World 生成结果</a>
+    <a href="index.html">&#8592; NC-World video demos</a>
     <a href="https://github.com/lixuan27/NC-World-demo">GitHub</a>
   </nav>
 </header>
 
-<div class="grid">
+<section>
+  <div class="dom">the task</div>
+  <h2>Ground truth episodes</h2>
+  <p>Six variants cover the four axes the experiments sweep, namely the algebra of the update, the
+  density of the uncover supervision, a visible state indicator, and events that the action does
+  not announce. Every episode is a deterministic function of its seed.</p>
+  <div class="grid">
     <figure class="take">
       <video src="videos/revealtable/s5_dinf.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">s5_dinf</span>
-        <b>S5, uncover at the end</b>
-        <span class="zh">S₅ 相邻对换，仅在末尾揭盖（d = ∞）</span>
-        <span class="meta">9 chunks · uncover at 8 · 73 frames · 4.87 s · 640&times;480</span>
+      <figcaption><span class="lab">s5_dinf</span><b>Adjacent transpositions, one uncover at the end</b><span class="txt">The covered row is swapped eight times and uncovered once, so the pixels supervise the covered state in one chunk out of nine.</span>
+        <span class="meta">9 chunks &middot; uncover at 8 &middot; 73 frames &middot; 4.87 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_mix.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">s5_mix</span>
-        <b>S5, mixed uncover schedule</b>
-        <span class="zh">S₅，揭盖随机插入换位槽（混合调度）</span>
-        <span class="meta">9 chunks · uncover at 3, 5, 8 · 65 frames · 4.33 s · 640&times;480</span>
+      <figcaption><span class="lab">s5_mix</span><b>Adjacent transpositions, mixed uncover schedule</b><span class="txt">Uncover actions replace transposition slots at random positions, which raises the supervision density and removes any dependence on position.</span>
+        <span class="meta">9 chunks &middot; uncover at 3, 5, 8 &middot; 65 frames &middot; 4.33 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_d2.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">s5_d2</span>
-        <b>S5, uncover every two swaps</b>
-        <span class="zh">S₅，每两次换位揭一次盖（d = 2）</span>
-        <span class="meta">12 chunks · uncover at 2, 5, 8, 11 · 85 frames · 5.67 s · 640&times;480</span>
+      <figcaption><span class="lab">s5_d2</span><b>Adjacent transpositions, uncover every two swaps</b><span class="txt">One cell of the interval sweep, where the covered state is revealed often enough to stay inside a short cache.</span>
+        <span class="meta">12 chunks &middot; uncover at 2, 5, 8, 11 &middot; 85 frames &middot; 5.67 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
     <figure class="take">
       <video src="videos/revealtable/z5_dinf.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">z5_dinf</span>
-        <b>Z5 turntable rotation</b>
-        <span class="zh">Z₅ 转台整排旋转，末尾揭盖</span>
-        <span class="meta">9 chunks · uncover at 8 · 73 frames · 4.87 s · 640&times;480</span>
+      <figcaption><span class="lab">z5_dinf</span><b>Turntable rotation of the whole row</b><span class="txt">The update is a cyclic shift rather than a transposition, which lowers the complexity class while leaving supervision unchanged.</span>
+        <span class="meta">9 chunks &middot; uncover at 8 &middot; 73 frames &middot; 4.87 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_full.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">s5_full</span>
-        <b>S5 with a visible state indicator</b>
-        <span class="zh">S₅，角落绘出全状态指示器</span>
-        <span class="meta">9 chunks · uncover at 8 · 73 frames · 4.87 s · 640&times;480</span>
+      <figcaption><span class="lab">s5_full</span><b>Visible state indicator in the corner</b><span class="txt">The covered permutation is painted into every frame, so the state can be copied from the pixels in place of being tracked.</span>
+        <span class="meta">9 chunks &middot; uncover at 8 &middot; 73 frames &middot; 4.87 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
     <figure class="take">
       <video src="videos/revealtable/s5_fail.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
-      <figcaption>
-        <span class="lab">s5_fail</span>
-        <b>S5 with visibly failing swaps</b>
-        <span class="zh">S₅，动作声明换位而画面卡住，状态不变</span>
-        <span class="meta">9 chunks · uncover at 8 · 73 frames · 4.87 s · 640&times;480</span>
+      <figcaption><span class="lab">s5_fail</span><b>Visibly failing transpositions</b><span class="txt">The action announces a swap, the lids stall and return, and the state stays where it was, so the model has to read the outcome.</span>
+        <span class="meta">9 chunks &middot; uncover at 8 &middot; 73 frames &middot; 4.87 s &middot; 640&times;480</span>
       </figcaption>
     </figure>
-</div>
+  </div>
+</section>
+
+<section>
+  <div class="dom">the model</div>
+  <h2>Streaming rollouts at thirty thousand steps</h2>
+  <p>Each panel shows ground truth on the left and the streaming rollout of the model on the right,
+  produced chunk by chunk from the opening chunk and the action sequence alone, with the committed
+  cache rolling and the exponential moving average weights in force. The three arms share one
+  0.12B block causal backbone and differ in the uncover schedule they trained on and in the cache
+  window they run with.</p>
+  <div class="grid pred">
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k8mix_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep0</span><b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span>
+        <span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k8mix_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k8mix &middot; step 30k &middot; ep1</span><b>Mixed uncover schedule, cache window of eight chunks</b><span class="txt">The lids lift on command, the visible row is exact, and the covered permutation is read correctly in most episodes.</span>
+        <span class="meta">exact match 0.820 &middot; per slot 0.900 &middot; undecodable 0.033 &middot; visible row 1.000</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k2mix_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep0</span><b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span>
+        <span class="meta">exact match 0.571 at interval 0 &middot; 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.000 at interval 4</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k2mix_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k2mix &middot; step 30k &middot; ep1</span><b>Mixed uncover schedule, cache window of two chunks</b><span class="txt">The same schedule under a short cache, where permanence holds while the uncover interval stays inside the window.</span>
+        <span class="meta">exact match 0.571 at interval 0 &middot; 0.969 at interval 1 &middot; 0.648 at interval 2 &middot; 0.000 at interval 4</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k8inf_ep0.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep0</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
+        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k8inf_ep1.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep1</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
+        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
+      </figcaption>
+    </figure>
+    <figure class="take wide">
+      <video src="videos/revealtable/pred_rt_k8inf_ep2.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+      <figcaption><span class="lab">rt_k8inf &middot; step 30k &middot; ep2</span><b>One uncover per episode, cache window of eight chunks</b><span class="txt">Under supervision in one chunk out of nine the uncover action is executed as another transposition, so the lids stay down.</span>
+        <span class="meta">exact match 0.000 &middot; undecodable 0.820 &middot; visible row 1.000 at the training length</span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
 
 <footer>
-  Ground truth renders of the task. Each episode is a deterministic function of its seed, the canvas
-  is 320&times;240 and is shown at twice that size, playback is 15 frames per second, and the
-  three state decoder reads every uncover chunk of all six episodes correctly.
+  Rendering: canvas 320&times;240, playback 15 frames per second, task clips shown at twice their
+  native size and rollout panels at one and a half times. Readings: exact match scores the whole
+  covered permutation against chance of 0.008, per slot scores each of the five slots against
+  chance of 0.200, and undecodable counts frames where the decoder declines to commit, which
+  separates a failure to render from a failure to remember. Passing ground truth video through the
+  same autoencoder and decoding the result returns exact match 1.000 on all six variants, so the
+  codec bounds none of these readings.
 </footer>
 </div>
 </body>
