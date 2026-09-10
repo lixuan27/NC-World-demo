@@ -1,377 +1,336 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NC-World · Native Causal World Model — Video Demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NC-World</title>
+<meta name="description" content="NC-World: a from-scratch block-causal video world model, and where it keeps state it cannot see.">
 <style>
-  :root{--bg:#101418;--panel:#1A2026;--edge:#242C34;--tx:#E8EDF2;--mut:#8A97A3;--acc:#4FC3A1;--warn:#D9A441;--bad:#E0736B}
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{background:var(--bg);color:var(--tx);margin:0;padding:0 20px 72px;
-    font:16px/1.6 "Avenir Next","Helvetica Neue",system-ui,sans-serif}
-  .wrap{max-width:1080px;margin:0 auto}
-  header{padding:48px 0 12px;border-bottom:1px solid var(--edge)}
-  h1{font-size:29px;font-weight:600;margin:0 0 6px;text-wrap:balance}
-  h1 em{color:var(--acc);font-style:normal}
-  .sub{color:var(--mut);max-width:72ch;margin:0 0 12px;font-size:15px}
-  nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
-  nav a{color:var(--acc);text-decoration:none;font-size:13px;border:1px solid var(--edge);
-    border-radius:999px;padding:5px 12px;background:var(--panel)}
-  nav a:hover{border-color:var(--acc)}
-  nav a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
-  section{margin-top:40px}
-  .dom{color:var(--acc);text-transform:uppercase;font-size:11.5px;letter-spacing:.14em;font-weight:600}
-  section>h2{font-size:19px;font-weight:600;margin:4px 0 6px;text-wrap:balance}
-  section>p{color:var(--mut);font-size:14px;max-width:76ch;margin:0 0 16px}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
-  th{text-align:left;padding:7px 9px;color:var(--mut);font-weight:600;
-    border-bottom:1px solid var(--edge);font-size:12px;letter-spacing:.05em}
-  td{padding:7px 9px;border-bottom:1px solid rgba(36,44,52,.5)}
-  td.n{text-align:center;font-variant-numeric:tabular-nums}
-  .win{color:var(--acc);font-weight:600}
-  .lose{color:var(--bad)}
-  .floor{color:var(--mut)}
-  .scroll{overflow-x:auto}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-  .take{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px}
-  .take video{width:100%;display:block;border-radius:6px;background:#000}
-  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .lab{font:600 10px/1 "SF Mono","Cascadia Code",Consolas,monospace;
-    letter-spacing:.08em;color:var(--mut);margin:6px 0 4px;text-transform:uppercase}
-  .lab.gen{color:var(--acc)}
-  .bar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
-  button{background:var(--acc);color:#0B1210;border:0;border-radius:6px;
-    padding:6px 14px;font:600 12.5px "Avenir Next",system-ui,sans-serif;cursor:pointer}
-  button:hover{filter:brightness(1.1)}
-  button:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
-  .chip{font:11.5px "SF Mono","Cascadia Code",Consolas,monospace;
-    font-variant-numeric:tabular-nums;color:var(--mut);background:var(--bg);
-    border:1px solid var(--edge);border-radius:999px;padding:3px 9px;white-space:nowrap}
-  .chip b{color:var(--tx);font-weight:600}
-  .note{color:var(--mut);font-size:12.5px;margin:8px 0 0;max-width:76ch}
-  footer{color:var(--mut);font-size:12.5px;border-top:1px solid var(--edge);
-    margin-top:52px;padding-top:16px;max-width:78ch}
-  footer a{color:var(--acc)}
+:root{
+  --paper:#f6f5f2; --ink:#14181c; --ink-2:#4a5560; --rule:#ddd9d2; --panel:#ffffff;
+  --accent:#0c6b70; --warn:#b5482f; --ok:#3f7a4d;
+  --c1:#d94f45; --c2:#e2a73c; --c3:#4c8b5a; --c4:#3d6ea8; --c5:#8d6ea8;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#0f1216;--ink:#e8e6e1;--ink-2:#a3aab3;--rule:#2a3038;--panel:#161b21;--accent:#4fb3b8;--warn:#e0755c;--ok:#6fb383;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     font-size:15.5px;line-height:1.75;letter-spacing:.005em}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+a:hover{border-bottom-color:var(--accent)}
+header{padding:64px 0 34px;border-bottom:1px solid var(--rule)}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.12;margin:0 0 14px;letter-spacing:-.02em;font-weight:650;text-wrap:balance}
+h1 .sub{display:block;font-size:clamp(15px,2.2vw,19px);font-weight:400;color:var(--ink-2);margin-top:12px;letter-spacing:0}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.lede{font-size:17px;max-width:64ch;color:var(--ink);margin:18px 0 0}
+.meta{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:26px;display:flex;flex-wrap:wrap;gap:8px 22px}
+.pill{border:1px solid var(--rule);border-radius:100px;padding:3px 11px}
+section{padding:46px 0;border-bottom:1px solid var(--rule)}
+h2{font-size:23px;margin:0 0 6px;letter-spacing:-.01em;font-weight:640;text-wrap:balance}
+h3{font-size:16px;margin:30px 0 6px;font-weight:640}
+p{max-width:70ch}
+.dim{color:var(--ink-2)}
+.small{font-size:13.5px}
+figure{margin:22px 0 0}
+figcaption{font-size:12.5px;color:var(--ink-2);margin-top:8px;max-width:78ch}
+img{max-width:100%;height:auto;display:block;border-radius:6px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:16px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+video{width:100%;display:block;border-radius:6px;background:#000}
+.vcap{font-family:var(--mono);font-size:11px;color:var(--ink-2);margin-top:6px;display:flex;justify-content:space-between}
+.kpi{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(154px,1fr));margin:26px 0 0}
+.kpi .card{padding:14px 16px}
+.kpi .n{font-family:var(--mono);font-size:25px;font-weight:600;letter-spacing:-.02em;display:block;line-height:1.15}
+.kpi .l{font-size:12px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.45}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin:18px 0 0;display:block;overflow-x:auto}
+.tbl th,.tbl td{border-bottom:1px solid var(--rule);padding:7px 11px;text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left;white-space:normal;min-width:190px}
+.tbl th{font-size:11.5px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500}
+.tbl td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl tr.hi td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.win{color:var(--ok);font-weight:600}.lose{color:var(--warn);font-weight:600}
+.note{border-left:2px solid var(--accent);padding:2px 0 2px 15px;margin:22px 0 0;color:var(--ink-2);font-size:14px;max-width:72ch}
+.note.warn{border-left-color:var(--warn)}
+ul{max-width:70ch;padding-left:20px}li{margin:5px 0}
+.rail{display:grid;grid-template-columns:118px 1fr;gap:26px;align-items:start}
+@media(max-width:760px){.rail{grid-template-columns:1fr;gap:4px}}
+.rail .side{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);padding-top:7px}
+footer{padding:36px 0 60px;font-size:13px;color:var(--ink-2)}
+code{font-family:var(--mono);font-size:.9em;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.strip{display:flex;gap:5px;margin:16px 0 0}
+.strip span{height:5px;flex:1;border-radius:2px}
+svg.flow{width:100%;height:auto;margin-top:22px}
+.flow text{font-family:var(--mono);font-size:10.5px;fill:var(--ink)}
+.flow .lbl{font-size:9.5px;fill:var(--ink-2)}
+.flow rect{fill:var(--panel);stroke:var(--rule)}
+.flow rect.hl{stroke:var(--accent);stroke-width:1.6}
+.flow path,.flow line{stroke:var(--ink-2);fill:none}
 </style>
 </head>
 <body>
-<div class="wrap">
 
 <header>
-  <h1>NC-World：<em>原生因果世界模型</em>的生成结果</h1>
-  <p class="sub"><b>2026-08-26 全站重制</b>：所有域的片段都以逐域扫描出的最优流式采样设置重新生成（不重训任何模型），设置与数字一并列出。Block-causal DiT + rectified flow + rolling KV cache 的流式世界模型。每格左为 held-out 真实视频，右为模型仅凭首帧 + 动作/文本条件流式续写。全部为验证集轨迹。<b>本页所有片段与数字均来自各链当前最新 checkpoint。</b></p>
-  <nav>
-    <a href="#idea">💡 核心问题</a><a href="CORE_IDEA.md">📖 完整论述</a><a href="revealtable.html">🎬 RevealTable 任务</a><a href="#board">结果总表</a><a href="#ladder">因果 vs 双向</a><a href="#libero">LIBERO</a><a href="#langtable">LangTable</a><a href="#bridge">Bridge</a><a href="bundle/README.md">⬇ 精选包</a><a href="#figs">📈 可视化</a><a href="quantitative_results.html">📋 Quantitative results</a><a href="EVIDENCE_TABLES.md">📋 数据表</a><a href="#charts">📊 早期图表</a><a href="STAGE_REPORT_2026-08-28.md">📄 阶段报告</a><a href="#longform">长时程</a><a href="#stages">训练课程</a><a href="#sampler">采样器消融</a><a href="#contrib">方法消融</a><a href="#ceiling">评测上限</a><a href="#floors">评测地板</a>
-  </nav>
+<div class="wrap">
+  <p class="eyebrow">Native causal video world model · 阶段公开页 · 2026-09-10</p>
+  <h1>被杯子盖住的球，模型到底记住了没有
+    <span class="sub">NC-World：一个完全从零训练的 action-conditioned block-causal video world model，以及一套直接从它生成的画面里读出「看不见的状态」的量尺</span>
+  </h1>
+  <p class="lede">视频世界模型的像素损失从来不监督「看不见的东西」，而推理时的 KV cache 只增不改。那么当一个物体被挡住、被推走、被盖进杯子里，模型是把它<strong>带着走</strong>（carry），还是等它重新露面时<strong>就地重画</strong>（re-render）？这个页面给出我们在真实机器人视频（DROID）与一个自建隐状态任务（RevealTable，揭盖台）上的全部可复现读数，包括所有 benchmark 绝对分、失败的实验，以及测试时训练（test-time training）在什么条件下真的能抬分。</p>
+  <div class="meta">
+    <span class="pill">DROID 273 h · 57 774 集 · 三视角已校验</span>
+    <span class="pill">0.5B / 1B / 3B 从零训练</span>
+    <span class="pill">全部读数为绝对值，非归一化</span>
+    <span class="pill">项目状态：2026-09-07 起暂停（资源让给新项目）</span>
+  </div>
+  <div class="strip" aria-hidden="true">
+    <span style="background:var(--c1)"></span><span style="background:var(--c2)"></span><span style="background:var(--c3)"></span><span style="background:var(--c4)"></span><span style="background:var(--c5)"></span>
+  </div>
+</div>
 </header>
 
-<section id="idea">
-  <div class="dom">THE QUESTION · 一句话主线</div>
-  <h2>流式世界模型到底以什么为条件？</h2>
-  <p>生成时，模型每一步依赖的历史有三个属性：<b>它是模型自己上一刻生成的</b>（不是真值）、<b>它已写进缓存永不可改</b>（错误无法回头修正）、<b>它处在采样器决定的特定噪声水平上</b>（不由训练分布决定）。而标准视频训练给的历史，在这三点上都不是那个东西：它是数据集真值、可被后续注意力改写、噪声水平随机采样。</p>
-  <p><b>训练与推理的上下文不匹配</b>和<b>闭环误差累积</b>是同一件事的两面：误差之所以累积，是因为模型从未学过如何在自己犯过错的历史上继续正确演化。本项目把这条落差拆成三个可以逐项消融的坐标，每一项单独测价。</p>
-  <div class="scroll"><table>
-    <tr><th>推理历史的属性</th><th>标准训练给的</th><th>我们的对齐动作</th><th class="n">实测价值</th></tr>
-    <tr><td>信息只能单向流动</td><td>双向注意力可改写过去</td><td>块状因果注意力</td><td class="n win">6.4×</td></tr>
-    <tr><td>历史由模型自产</td><td>数据集真值</td><td>训练中让模型真的自生成前几个片段，损失取在更后面</td><td class="n win" rowspan="2">2.2×</td></tr>
-    <tr><td>噪声水平由采样器决定</td><td>在所有合法组合上均匀采样</td><td>直接从推理那一族噪声阶梯采样</td></tr>
-  </table></div>
-  <p class="note"><b>最锋利的一条证据。</b>近年给不同片段分配独立噪声强度的做法，用意是让模型学会在较干净的过去条件下去噪较脏的未来。但这个用意<b>在双向注意力上根本无法实现</b>——双向允许干净块与噪声块互相看见，那个本该被学会的不对称从未发生，损失在教一件模型推理时永远遇不到的事。单变量实验（全部从随机初始化、同数据同步数同协议）：双向 + 独立噪声 <b>FVD 4454</b>，而同一双向骨干退回整段共用噪声反而是 <b>1566</b>，<b>加上去比不加还差 2.8 倍</b>；换成块状因果后同配方 <b>691</b>。<br>⇒ <b>因果性不是为流式付出的质量代价，它是让这套训练信号有意义的前提。</b>完整论述见 <a href="CORE_IDEA.md">CORE_IDEA.md</a>。</p>
-</section>
-
-<section id="board">
-  <div class="dom">RESULTS · 2026-08-26</div>
-  <h2>外部并读：同数据、同度量实现、附 do-nothing 地板</h2>
-  <p>IRASim 官方验证 split（与训练零重叠），8 帧动作条件续写、512 集、同一 I3D 权重与预处理约定（同名 FVD 跨实现可差 3–4 倍）。</p>
-  <div class="scroll"><table>
-    <tr><th>FVD ↓</th><th class="n">冻结地板</th><th class="n">本模型</th><th class="n">IRASim</th><th class="n">DriftWorld</th></tr>
-    <tr><td>Bridge-V2 <span class="chip">终版 100k</span></td><td class="n floor">238.7</td><td class="n win">45.08</td><td class="n">91.6</td><td class="n">101.2</td></tr>
-    <tr><td>Language-Table <span class="chip">终版 120k</span></td><td class="n floor">167.3</td><td class="n win">37.97</td><td class="n">60.05</td><td class="n">39.09</td></tr>
-    <tr><td>RT-1 <span class="chip">30k 终点</span></td><td class="n floor">459.5</td><td class="n">79.47</td><td class="n">93.0</td><td class="n win">68.72</td></tr>
-    <tr><td>RT-1 <span class="chip">10k（该链最优点）</span></td><td class="n floor">—</td><td class="n">69.32</td><td class="n">—</td><td class="n">68.72</td></tr>
-  </table></div>
-  <p class="note">RT-1 是唯一负格。收敛探针显示其 FVD 随训练<b>单调上升</b>（10k 69.32 → 20k 76.32 → 30k 79.47）而 LPIPS 持平——不是预算不足，是训练后期分布层面退化；10k 处与 DriftWorld 相差 0.9%。我们仍报训练终点的 79.47（不事后挑最优点），并把整条曲线一并列出。Bridge 也同向（58k 40.42 → 100k 45.08）；按区间宽度归一后 RT-1 每万步 +7.3%、Bridge +2.7%，<b>同向但速率差 2.7 倍，不能当作同一现象</b>。四条链的窗口起点相差很大（LIBERO 从 20k 起、Bridge 从 58k 起），因此<b>不在可比训练阶段</b>，我们只报链内相对变化，不跨链比 FVD 绝对值（协议 clip 数不同）。</p>
-
-  <h2 style="margin-top:26px">绝对面板与系统能力</h2>
-  <div class="scroll"><table>
-    <tr><th>项</th><th class="n">数值</th><th>说明</th></tr>
-    <tr><td>因果 vs 双向 <span class="chip">受控单变量</span></td><td class="n win">FVD 690.8 vs 4454.4</td><td>见下方「因果 vs 双向」节。三臂协议逐字段相同（7500 步 · 32 片 · cfg 1.0 · ar 8 · inflight 1 · cache 4），唯一变量是注意力掩码与噪声调度</td></tr>
-    <tr><td>LIBERO 终版 100k（49 帧 · <b>48 集 · 2 步去噪</b>）</td><td class="n">PSNR 33.59 · FVD 56.87</td><td>较 20k 全指标改善，长时程受益更大（f49 +1.45 dB vs f25 +1.06）。⚠️ 该行为 <b>48 集</b>协议，与下方 LIBERO 节的 <b>24 集</b>数字<b>不可比</b>（FVD 仅在同 clip 数下可比）；其采样深度也是旧的 2 步。</td></tr>
-    <tr><td>流式吞吐（真机域，生产配置）</td><td class="n win">48.6 fps</td><td>3.24× 实时；首帧延迟 188 ms（双向模型 5.6 s）</td></tr>
-    <tr><td>在线重规划</td><td class="n">省算 36–74%</td><td>输出与全量重算 bit-exact（16/16）</td></tr>
-    <tr><td>动作→画面结构延迟地板</td><td class="n">533 ms</td><td>= 时间粒度 Δt_c，实验证实恰为质量最优点</td></tr>
-  </table></div>
-</section>
-
-<section id="ladder">
-  <div class="dom">CONTROLLED · 从零对从零 · 同批 clip · 各 7500 步</div>
-  <h2>因果注意力是 diffusion forcing 可用的前提</h2>
-  <div class="scroll"><table>
-    <tr><th>臂（全部从随机初始化）</th><th class="n">FVD ↓</th><th class="n">响应度 b</th></tr>
-    <tr><td>双向 + diffusion forcing</td><td class="n lose">4454.4</td><td class="n lose">−0.006</td></tr>
-    <tr><td>双向 + 同质噪声</td><td class="n">1566.3</td><td class="n">+0.392</td></tr>
-    <tr><td>因果 chunk1</td><td class="n">699.6</td><td class="n">+0.456</td></tr>
-    <tr><td>因果 chunk4</td><td class="n win">852.1</td><td class="n win">+0.892</td></tr>
-    <tr><td>因果 + 预训练初始化</td><td class="n win">498.8</td><td class="n win">+1.031</td></tr>
-  </table></div>
-  <p class="note">响应度 b：场景动得多 10 倍时，模型是否也多给约 10 倍运动（b=1 忠实、b=0 完全不跟随）。双向 + diffusion forcing 的 b≈0 意味着其输出运动量与场景实际运动量<b>零相关</b>。因果化后 FVD 好 2–6 倍且 b 显著更高；预训练初始化再压 40% FVD 并把 b 推到饱和。</p>
-  <div class="grid4s"></div>
-</section>
-
-<section id="libero">
-  <div class="dom">LIBERO · 终版 100k · 49 帧 · 24 集 · 8 步去噪 · PSNR 33.99 · LPIPS 0.0190 · FVD 56.5</div>
-  <h2>机械臂操作：全程锐利刚体，超实时生成</h2>
-  <p>本节片段以逐域扫描出的最优采样深度重制：把每个 chunk 的去噪更新次数从 2 提到 8（已提交历史与活动窗口不变），<b>PSNR 31.50 → 33.99（+2.5 dB）、LPIPS 0.0228 → 0.0190、FVD 64.3 → 56.5（−12.1%）</b>。不重训任何模型。</p>
-  <div class="grid" data-dom="libero_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
-</section>
-
-<section id="langtable">
-  <div class="dom">LANGUAGE-TABLE · 终版 120k 全预算 · 并读 FVD 37.97</div>
-  <h2>多物体交互下的稳定跟踪</h2>
-  <p>该域是唯一一个<b>采样深度扫描确认现状即最优</b>的域（41 帧 24 集协议下 FVD 168.0 / 170.7 / 179.1，对应 2 / 4 / 8 步）。确认默认值的扫描也是结果，故本节片段设置未变。</p>
-  <div class="grid" data-dom="lt_final" data-n="2" data-idx="0000,0007"></div>
-</section>
-
-<section id="bridge">
-  <div class="dom">BRIDGE-V2 · 终版 100k · <b>77 帧</b>（数据集上限）· 真实机器人</div>
-  <h2>真实域：背景稳定，运动区仍是主要失效</h2>
-  <p>此前本节展示的是 <b>9 帧（0.6 秒）</b>片段——那是<b>外部并读协议</b>的长度（IRASim 8 帧续写），用于 benchmark 行正确、用于展示荒谬。现改为 <b>77 帧</b>：<b>这是数据集的硬上限</b>（Bridge 最长的 held-out episode 只有 79 帧，再长就没有真值可对），也是模型 25 帧训练窗口的 <b>3 倍</b>，属 rolling cache 的真实长时程外推。</p>
-  <div class="scroll"><table>
-    <tr><th>Bridge-V2 · 23 集 · 77 帧 · 窄流水线 · 8 步</th><th class="n">PSNR</th><th class="n">SSIM</th><th class="n">LPIPS</th><th class="n">FVD</th></tr>
-    <tr><td>全片平均</td><td class="n">22.58</td><td class="n">0.855</td><td class="n">0.0748</td><td class="n">251.7</td></tr>
-    <tr><td>首帧 → 末帧 PSNR</td><td class="n" colspan="4">37.08 → 20.26（77 帧内的漂移曲线）</td></tr>
-  </table></div>
-  <p class="note">⚠️ 这些数字与看板上的并读 <b>FVD 45.08</b>（512 集 · 9 帧）<b>完全不可比</b>——集数与帧长都不同，FVD 只在同 clip 数同长度下可比。两套数字必须分开读。</p>
-  <div class="grid" data-dom="bridge_final" data-n="4" data-idx="0000,0001,0002,0003"></div>
-</section>
-
-<section id="longform">
-  <div class="dom">LONG-FORM · 253 帧 ≈ 17 秒连续自回归 · 无重置 · DROID 真机 · FVD 274.8</div>
-  <h2>长时程流式：真机 17 秒，且快于实时</h2>
-  <p>本节展示<b>本项目从零训练</b>的 0.5B 模型（214 GPU 时）。rolling KV cache 逐块提交，无重置。视频按逐帧检查速度导出，<b>不是</b>生成速度。</p>
-  <div class="grid" data-dom="longform_droid" data-n="4" data-idx="0000,0002,0005,0011"></div>
-  <div class="scroll"><table>
-    <tr><th>DROID 253 帧 · 24 集 · 协议逐项一致</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
-    <tr><td><b>本页展示：从零 0.5B · 窄流水线 · 12 步 · 引导 1.5</b></td><td class="n win">19.71</td><td class="n win">0.1337</td><td class="n win">274.8</td></tr>
-    <tr><td>同上，引导 2（此前默认）</td><td class="n">19.61</td><td class="n">0.1363</td><td class="n">283.5</td></tr>
-    <tr><td class="lose">同上，引导 3</td><td class="n lose">19.37</td><td class="n lose">0.1458</td><td class="n lose">337.8</td></tr>
-    <tr><td>从零 0.5B · 窄流水线 · 6 步</td><td class="n">19.68</td><td class="n">0.1368</td><td class="n">296.0</td></tr>
-    <tr><td>从零 0.5B · stage-2a（中间段）</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
-    <tr><td>从零 0.5B · stage-1 终点</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
-    <tr><td class="lose">同一权重，仅把在飞 chunk 数 3→8</td><td class="n lose">16.62</td><td class="n lose">0.2191</td><td class="n lose">713.2</td></tr>
-    <tr><td><b>自编码器往返上界</b>（GT 编解码后当生成结果打分）</td><td class="n">35.38</td><td class="n">0.0095</td><td class="n">—</td></tr>
-  </table></div>
-  <p class="note"><b>三个旋钮都被扫过，每一个的结论都写在上表里。</b>引导强度此前一律取 2（沿用而从未在机器人域扫过）：实测 1.5 优于 2 优于 3（274.8 / 283.5 / 337.8），且 PSNR 与 LPIPS 同向，故本页改用 1.5。永久锚点帧数扫描（1 / 2 / 4 → 283.5 / 284.7 / 323.5）显示<b>更宽的锚点买不到东西</b>，所以漂移不是「模型失去初始条件」那类失效。<br><b>长上下文课程是有效的</b>：在完全一致的采样设置下，FVD 沿 stage-1 → 2a → 2b 单调改善 513.9 → 350.5 → <b>283.5</b>（−45%）。<br><b>而一个推理侧参数能把同一权重打崩 2.4 倍</b>：把异步去噪阶梯的在飞 chunk 数从 3 提到 8，FVD 从 283.5 掉到 713.2，并引入随时间累积的全局外观漂移。此前本页展示的片段正是受此影响。<br>这一域离上界仍远：Wan2.2 VAE 在同样 253 帧上能重建到 <b>35.38 dB / LPIPS 0.0095</b>，且上界几乎不随时长衰减——<b>剩下的差距不是编解码造成的</b>。本项目 DROID 线目前只投入 <b>214 GPU 时 @ 0.5B</b>；从零 1B 阶梯正在训练，预算 <b>994 GPU 时</b>。</p>
-</section>
-
-<section id="stages">
-  <div class="dom">TRAINING CURRICULUM · 同一采样设置 · 同一片段 · 只差训练到哪一段</div>
-  <h2>长上下文课程买到了什么</h2>
-  <p>三段窗口课程：先在 45 帧的短片上学局部动力学，再延到 125 帧，最后延到 253 帧。下面三路是同一条训练链的三个阶段终点，在<b>完全相同</b>的采样设置下续写同一段视频。</p>
-  <div class="multi" data-multi="droid_stages" data-idx="0000,0005"
-       data-cols="Ground truth:gt|stage-1 (45帧窗口) · FVD 513.9:s1|stage-2a (125帧) · FVD 350.5:s2a|stage-2b (253帧) · FVD 296.0:s2b"
-       data-note="253 帧 · 同一初始噪声"></div>
-  <div class="scroll"><table>
-    <tr><th>训练到哪一段</th><th class="n">训练窗口</th><th class="n">PSNR</th><th class="n">LPIPS</th><th class="n">FVD ↓</th></tr>
-    <tr><td>stage-1 终点</td><td class="n">45 帧</td><td class="n">19.64</td><td class="n">0.1520</td><td class="n">513.9</td></tr>
-    <tr><td>stage-2a</td><td class="n">125 帧</td><td class="n">19.54</td><td class="n">0.1435</td><td class="n">350.5</td></tr>
-    <tr><td><b>stage-2b（本页展示）</b></td><td class="n">253 帧</td><td class="n win">19.71</td><td class="n win">0.1337</td><td class="n win">274.8</td></tr>
-  </table></div>
-  <p class="note">FVD 沿课程单调改善 <b>513.9 → 350.5 → 274.8（−47%）</b>，而 PSNR 基本持平——课程买到的是<b>分布层面的长时程一致性</b>，不是逐帧锐度。这是把三段钉在同一采样设置下才看得到的：各段若按自己配置文件里的设置评测，结论会完全反过来。</p>
-</section>
-
-<section id="sampler">
-  <div class="dom">INFERENCE ABLATION · 同一权重 · 只改流水线宽度</div>
-  <h2>一个推理旋钮值 2.6 倍</h2>
-  <p>流式推理用一条异步去噪阶梯：若干个 chunk 同时在飞，各自处在不同噪声水平，最早的那个完成后被提交进 KV cache。同时在飞的 chunk 数是个可调参数——下面两路是<b>同一个权重</b>，只改这一个数。</p>
-  <div class="multi" data-multi="droid_sampler" data-idx="0000,0005"
-       data-cols="Ground truth:gt|在飞 3 个 · FVD 296.0:narrow|在飞 8 个 · FVD 724.5:wide"
-       data-note="同权重 · 同片段 · 同引导强度"></div>
-  <p class="note">把在飞 chunk 数从 3 提到 8，FVD 从 <b>274.8 掉到 713.2（2.6 倍）</b>，PSNR 从 19.71 掉到 16.62，并引入随时间累积的<b>全局外观漂移</b>——逐帧亮度误差的斜率从 +1.0 变成 −3.4 / 100 帧，饱和度误差的增速快 20–60 倍。机制上讲得通：在飞的 chunk 越多，一个 chunk 提交时所注意到的邻居里"仍然很噪"的就越多。<br>⚠️ 这与去噪<b>次数</b>是两件事，而它们的效应符号相反：在固定流水线宽度下把每个 chunk 的更新次数从 6 提到 12 反而更好（296.0 → 283.5）。两者都会抬高"有效步数"，所以把它们合称"深度"会把两个相消的效应混在一起。</p>
-</section>
-
-<section id="contrib">
-  <div class="dom">METHOD ABLATION · 同骨干 · 同课程 · 同步数 · 只关掉两项训练侧改动</div>
-  <h2>两项训练侧改动值 2.3 倍</h2>
-  <p>本项目在标准配方之外加了两件事：一是让训练时的噪声调度向推理时实际走的那条阶梯对齐，二是训练时以一定概率把"已提交历史"当作干净上下文喂回去。下面两路是同骨干、同课程、同步数的两条链，只差这两项开关。</p>
-  <div class="multi" data-multi="droid_contrib" data-idx="0000,0005"
-       data-cols="Ground truth:gt|开启（本项目）· FVD 283.5:with|关闭 · FVD 629.9:without"
-       data-note="同骨干 · 同 253 帧课程 · 同 16k 步"></div>
-  <p class="note">关掉这两项后 FVD 从 <b>274.8 升到 629.9（2.3 倍）</b>，PSNR 从 19.71 掉到 16.91。⚠️ 这个对比此前在错误的采样设置下做过一次，当时只测出 13% 的差距；换到正确设置后差距是 <b>122%</b>——<b>在坏工作点上做的对照，其差值幅度不可信，方向对了也可能差一个数量级</b>。</p>
-</section>
-
-<section id="ceiling">
-  <div class="dom">EVALUATION CEILING · 生成质量的物理上限</div>
-  <h2>还有多少余量没用掉</h2>
-  <p>所有帧都要经过一个冻结的视频自编码器（时间 4 倍、空间 16 倍压缩）。把真值视频编码再解码、然后当作生成结果打分，得到的就是任何模型都不可能超过的上限。</p>
-  <div class="multi" data-multi="droid_ceiling" data-idx="0000,0005"
-       data-cols="Ground truth:gt|自编码器往返（上限）· 35.38 dB:rt|本模型生成 · 19.71 dB:pred"
-       data-note="253 帧 · 同一片段"></div>
-  <div class="scroll"><table>
-    <tr><th>253 帧 · 24 集</th><th class="n">PSNR</th><th class="n">SSIM</th><th class="n">LPIPS</th></tr>
-    <tr><td><b>自编码器往返上限</b></td><td class="n">35.38</td><td class="n">0.9641</td><td class="n">0.0095</td></tr>
-    <tr><td>本模型（0.5B · 214 GPU 时）</td><td class="n">19.71</td><td class="n">—</td><td class="n">0.1337</td></tr>
-    <tr><td>余量使用率</td><td class="n" colspan="3">PSNR 用掉 <b>56%</b> · LPIPS 差 <b>14 倍</b></td></tr>
-  </table></div>
-  <p class="note">上限在 21 帧处是 36.21 dB、253 帧处 35.38 dB，<b>只掉 0.83 dB</b>——自编码器的损失是空间性的，不随时长累积。所以剩下的伪影<b>不是编解码造成的</b>，中间那一路视频肉眼也证实了这点：往返画面干净，生成画面在机械臂处仍有明显失真。余量还有 44%，这正是规模研究要去拿的部分。</p>
-</section>
-
-<section id="figs">
-  <div class="dom">FIGURES · 莫兰迪配色 · 衬线体</div>
-  <h2>可视化结果</h2>
-  <p>每张图都由一个 fail-closed 的脚本从存档的结果 JSON 直接渲染，任一输入缺失即整体不出图。除坐标轴文字外没有任何数字是手抄进作图代码的，因为手抄的图会与它旁边的表悄悄不一致。完整数据表见 <a href="EVIDENCE_TABLES.md">EVIDENCE_TABLES.md</a>，其中标明了每一行的协议以及哪些行不可跨行比较。</p>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/01_causal_vs_bidirectional.png" alt="因果 vs 双向：本项目最强的一组受控证据" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">因果 vs 双向：本项目最强的一组受控证据</b><br>三臂全部从随机初始化，同一批数据，各训 7500 步，评测协议逐字段相同（32 片 · cfg 1.0 · 每块 8 次更新 · 在飞 1 · 缓存 4），唯一变量是注意力掩码与噪声调度。逐块独立噪声加在双向骨干上比不加还差 2.8 倍；换成块状因果后同配方好 6.4 倍。右图的 b ≈ 0 意味着那一臂输出的运动量与场景实际运动量毫无关系，这是四项像素指标都反映不出来的失效。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/02_external_benchmarks.png" alt="外部基准并读" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">外部基准并读</b><br>官方验证划分、8 帧动作条件续写、512 片段、同一套度量实现。同名 FVD 跨实现可差 3 到 4 倍，故实现一致必须声明。每域都画了冻结画面地板：一个全程静止的基线能拿到什么分数，是判断该指标可不可用的前提。RT-1 是唯一负格，如实列出。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/03_curriculum_and_guidance.png" alt="长上下文课程与引导强度" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">长上下文课程与引导强度</b><br>左：训练窗口 45 → 125 → 253 帧，三格采样设置完全一致，FVD 单调改善 42% 而 PSNR 持平。课程买到的是分布层面的长时程一致性，不是逐帧锐度。右：引导强度五档扫描，1.5 是真正的内部极小值，而此前全项目默认取 2 且从未在机器人域扫过。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/04_drift_and_ceiling.png" alt="误差是前置的，不是累积的" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">误差是前置的，不是累积的</b><br>253 帧连续生成的逐段 PSNR。前 50 帧掉 8.8 dB，之后 200 帧只再掉 1.6 dB。损失主要发生在模型第一次开始依赖自己输出的那一刻，不是长时间缓慢累积。这改变了优化方向：该攻的是最初两秒。色带是尚未用掉的余量。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/05_sampler_two_knobs.png" alt="两个旋钮乘积相同、方向相反" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">两个旋钮乘积相同、方向相反</b><br>同时在飞的片段数与每片段去噪更新次数，两者相乘就是通常所说的采样步数。但在其他条件完全相同时，加宽流水线代价 2.45 倍，加深去噪反而更好。机制回到主线：加宽流水线等于让一个片段在提交时所依赖的邻居更噪，改变的是历史的噪声水平而非算力总量。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/06_ablation_and_headroom.png" alt="两项训练侧改动的价值，以及还剩多少余量" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">两项训练侧改动的价值，以及还剩多少余量</b><br>左：自生成历史与对齐噪声阶梯两项一起值 2.22 倍，采样设置逐项一致。右：把真值经同一自编码器编解码往返后打分是 35.38 dB，本模型 19.71 dB，仅用掉 56%。天花板在 21 帧与 253 帧只差 0.83 dB，说明编解码器的损失不随时长累积，长时程伪影不是它造成的。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/07_commit_granularity.png" alt="提交粒度：可控性与保真度的权衡" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">提交粒度：可控性与保真度的权衡</b><br>一次因果提交覆盖的物理时间从 0.27 秒放到 1.07 秒，响应度从 0.46 升到 0.89，代价是 FVD 增加 23%。而 0.53 秒恰好等于独立测出的动作到画面变化的延迟下限。历史变得不可撤销的那个时间量子，同时决定了可控性上限与质量最优点。</figcaption>
-  </figure>
-  <figure style="margin:0 0 30px">
-    <img src="figs_morandi/08_action_dependence.png" alt="动作依赖度：域内诊断，非跨域排名" style="width:100%;max-width:820px;display:block;border-radius:8px;background:#FBF9F7">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:9px;max-width:78ch"><b style="color:var(--tx)">动作依赖度：域内诊断，非跨域排名</b><br>打乱动作后流匹配损失上升的相对幅度。固定机位域里机械臂几乎是画面唯一变化源，天花板本就高；手持机位域的背景与光照独立于动作变化，天花板本就低。因此跨行不可直接比较。</figcaption>
-  </figure>
-</section>
-
-<section id="charts">
-  <div class="dom">CHARTS · 全部由结果 JSON 直接渲染</div>
-  <h2>量化结果</h2>
-  <p>下列每张图都由一个 fail-closed 的脚本从存档的结果 JSON 直接生成，任一输入缺失即整体不出图；没有任何数字是手抄进作图代码的——手抄的图会与它旁边的表悄悄不一致。</p>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_coread.png" alt="外部并读：同 split、同度量实现、附冻结帧地板" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">外部并读：同 split、同度量实现、附冻结帧地板</b><br>Bridge-V2 与 Language-Table 明显领先两个公开基线；RT-1 是唯一负格，如实列出。注意每域都画了冻结帧地板——一个全程静止的基线能拿到什么分数，是判断该指标可不可用的前提。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_causal.png" alt="因果性是 diffusion forcing 可用的前提" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">因果性是 diffusion forcing 可用的前提</b><br>三臂全部从随机初始化、同数据同步数同协议。DF 加在双向骨干上比不加还差 2.8 倍；换成 block-causal 后同配方好 6.4 倍。右图的响应度 b 是「场景动得多 10 倍时模型是否也多给约 10 倍运动」的斜率，双向+DF 那一臂 b≈0 意味着输出运动与场景运动零相关。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_drift.png" alt="253 帧长 rollout：预算花在哪里" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">253 帧长 rollout：预算花在哪里</b><br>PSNR 在前 50 帧从 28.3 掉到 19.5，之后 200 帧只再掉 1.6 dB。**损失是前置的，不是累积的** —— 攻长时程质量该攻头两秒。虚线是自编码器往返上限 35.38 dB，我们只用掉 56% 的可用余量。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_curriculum.png" alt="长上下文课程买到了什么" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">长上下文课程买到了什么</b><br>45→125→253 帧窗口，FVD 单调改善 42% 而 PSNR 基本持平。课程买到的是分布层面的长时程一致性，不是逐帧锐度。三格采样设置完全一致。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_guidance.png" alt="引导强度有内部最优" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">引导强度有内部最优</b><br>五档扫描，1.5 是真正的极小值。此前全项目默认取 2，且从未在机器人域扫过。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_sampler.png" alt="两个旋钮乘积相同、方向相反" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">两个旋钮乘积相同、方向相反</b><br>在飞 chunk 数与每 chunk 更新次数的乘积就是常说的「采样步数」，但前者从 3 提到 8 使 FVD 崩 2.45 倍，后者增加反而更好。合称「深度」会把两件事混为一谈。</figcaption>
-  </figure>
-  <figure style="margin:0 0 26px">
-    <img src="figs/fig_responsiveness.png" alt="更粗的因果提交粒度买到运动响应度" style="width:100%;max-width:760px;display:block;border-radius:8px;background:#fff">
-    <figcaption style="color:var(--mut);font-size:13px;margin-top:8px;max-width:76ch"><b style="color:var(--tx)">更粗的因果提交粒度买到运动响应度</b><br>同一 block-causal 骨干下，提交粒度 Δt_c 从 0.27s 放到 1.07s，b 从 0.46 升到 0.89；两个双向对照远低于任何因果臂。粒度因此是设计轴而非自由参数——粗粒度换来响应度，代价是 +23% FVD。</figcaption>
-  </figure>
-</section>
-
-<section id="floors">
-  <div class="dom">EVALUATION INTEGRITY · 三个 benchmark 的地板判决</div>
-  <h2>现行动态指标：或由不动最大化，或由乱动饱和</h2>
-  <div class="scroll"><table>
-    <tr><th>Benchmark</th><th class="n">冻结帧（不动）</th><th class="n">乱动</th><th class="n">真实视频</th><th>判决</th></tr>
-    <tr><td>WorldModelBench 总分</td><td class="n lose">9.61</td><td class="n">—</td><td class="n">—</td><td>高于榜首 KLING 9.10 ⇒ 整张榜在 do-nothing 包络内</td></tr>
-    <tr><td>VBench subject_consistency</td><td class="n lose">1.0000</td><td class="n">0.9189</td><td class="n">0.9392</td><td>冻结帧满分且超真实视频</td></tr>
-    <tr><td>VBench motion_smoothness</td><td class="n lose">0.9983</td><td class="n">0.8899</td><td class="n">0.9861</td><td>"比真实视频还平滑"是症状不是成绩</td></tr>
-    <tr><td>VBench dynamic_degree</td><td class="n">0.0000</td><td class="n lose">0.9950</td><td class="n">0.6150</td><td>乱动近满分 ⇒ 只量"动多少"不量"动得对"</td></tr>
-    <tr><td>VBench overall_consistency</td><td class="n">0.2051</td><td class="n lose">0.2180</td><td class="n">0.2180</td><td>打乱帧序后分数<b>逐位不变</b> ⇒ 对时间顺序完全不敏感</td></tr>
-    <tr><td>Physics-IQ</td><td class="n">21.0</td><td class="n">1.0</td><td class="n">100.0</td><td>该轴可采；本模型 1.06 落在乱动地板上（如实报告，是下一个靶）</td></tr>
-  </table></div>
-  <h2 style="margin-top:26px">运动保真度是强域依赖的</h2>
-  <p>flow ratio = 模型产出的运动量 ÷ 该域真实运动量（各行用自己域的真值，故可跨域读）。</p>
-  <div class="scroll"><table>
-    <tr><th>域 / 臂</th><th class="n">产出运动</th><th class="n">真实运动</th><th class="n">flow ratio</th></tr>
-    <tr><td>DROID（动作条件）</td><td class="n">1.938</td><td class="n">2.266</td><td class="n win">0.855</td></tr>
-    <tr><td>RT-1（动作条件）</td><td class="n">11.232</td><td class="n">15.746</td><td class="n win">0.713</td></tr>
-    <tr><td>DROID 双向+DF（对照）</td><td class="n">1.038</td><td class="n">2.266</td><td class="n">0.458</td></tr>
-    <tr><td>Track-B 通用视频（文本条件）</td><td class="n">1.470</td><td class="n">4.272</td><td class="n lose">0.344</td></tr>
-  </table></div>
-  <p class="note"><b>动作条件的机器人域（0.71–0.86）是文本条件通用视频域（0.32–0.34）的 2 倍以上。</b>所以"模型偏静态"是<b>通用视频域</b>的陈述——机器人域的产出已达真实运动的七到八成。这条也确定了运动干预的战场：通用视频域余量最大，机器人域几乎没有余量。</p>
-  <p class="note"><b>一个诚实的仪器边界。</b>RT-1 的 FVD 随训练上升 14.6% 时，我们的四个量——运动水平（−0.7%）、响应度（−0.012）、逐帧 LPIPS、纯外观 FID（+5.9%）——全都基本持平或涨得少得多。也就是说存在一种<b>时间层面的退化，本项目现有仪器测不到</b>，只有 FVD 抓得住。e 与 b 刻画的是运动的一阶量（平均幅度、跨场景的幅度分配），高阶时间结构仍是盲区，这一条会写进论文的 limitation。</p>
-  <p class="note">VBench 九维经两地板法<b>零可采</b>：四维被冻结帧拿满分、五维被乱动追平或超过。本项目因此自造两把非比值尺子——跨速率弹性 e（同 clip 放大观测位移 1.72×，模型输出只放大 1.01×）与跨场景斜率 b（上表）——并规定每条运动结论必须同时报「水平 / 响应度 / 保真度」三个量。</p>
-</section>
-
-<footer>
-  数据：DROID、Bridge-V2、Language-Table、LIBERO、RT-1、通用视频语料（OpenVid-HD + Ditto-1M）。全部指标为 held-out 轨迹上的逐 clip 配对协议。方法与完整实验日志见
-  <a href="https://github.com/lixuan27/NC-World-demo">NC-World-demo</a> 的阶段报告。生成为流式（逐 chunk 提交进 rolling KV cache），支持 fork/resume 与在线重规划——这是双向视频模型没有的能力。
-</footer>
+<section><div class="wrap">
+<div class="rail"><div class="side">一句话</div><div>
+<h2>问题、做法、结论</h2>
+<p>我们从零训练一个「给定过去画面 + 接下来要执行的动作 → 逐块生成后续画面」的因果视频模型，然后用两把尺子量它：一把是真实机器人视频上的<strong>绝对画质与长时程漂移</strong>，另一把是自建的揭盖台任务，直接检查它生成的开盖画面里<strong>货物是不是真的在正确的杯子下面</strong>。三条主要结论：现成的机器人世界模型<strong>不携带</strong>被遮挡的内容，它靠保留的第一帧重画；把训练时的「揭盖」监督加密，并把训练布局换成 clean/noisy 交错，KV cache 第一次能盲盘 4 次对换仍 100% 读对；而测试时训练在这个体系里能买到的东西是<strong>部署机制校准</strong>，不是记忆。</p>
+<div class="kpi">
+  <div class="card"><span class="n">19.71<span class="dim" style="font-size:14px"> dB</span></span><span class="l">DROID 253 帧自由生成的绝对 PSNR（0.5B），FVD 274.85</span></div>
+  <div class="card"><span class="n">22.79<span class="dim" style="font-size:14px"> dB</span></span><span class="l">同协议 1B 的绝对 PSNR，FVD 155.8</span></div>
+  <div class="card"><span class="n">1.000</span><span class="l">揭盖台盲盘 4 次对换后整排列读对率（K2INT，窗口 2 块）</span></div>
+  <div class="card"><span class="n">+1.60<span class="dim" style="font-size:14px"> dB</span></span><span class="l">流式部署下一次性校准的增益（0.5B，24/24 片）</span></div>
+  <div class="card"><span class="n">45.08</span><span class="l">Bridge-V2 IRASim 协议 FVD，对手 91.60 / 101.20</span></div>
 </div>
-<script>
-function makeTake(dom,i,psnr,cap){
-  const d=document.createElement('div');d.className='take';
-  d.innerHTML='<div class="duo">'
-   +'<div><video src="videos/'+dom+'/gt_'+i+'.mp4" loop muted playsinline></video><div class="lab">Ground truth</div></div>'
-   +'<div><video src="videos/'+dom+'/pred_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">Generated</div></div></div>'
-   +'<div class="bar"><button>▶ 同步播放</button>'
-   +(psnr?'<span class="chip">PSNR <b>'+psnr+'</b> dB</span>':'')
-   +(cap?'<span class="chip">'+cap+'</span>':'')+'</div>';
-  const vids=d.querySelectorAll('video'),b=d.querySelector('button');
-  b.onclick=()=>{const paused=vids[0].paused;
-    vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
-    b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
-  return d;}
-document.querySelectorAll('.grid4s').forEach(g=>{
-  ['0003','0009'].forEach(i=>{
-    const d=document.createElement('div');d.className='take';
-    d.innerHTML='<div class="duo" style="grid-template-columns:1fr 1fr 1fr 1fr">'
-     +'<div><video src="videos/scratch_ladder/gt_'+i+'.mp4" loop muted playsinline></video><div class="lab">Ground truth</div></div>'
-     +'<div><video src="videos/scratch_ladder/bidirdf_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">双向+DF · FVD 4454</div></div>'
-     +'<div><video src="videos/scratch_ladder/causal_scratch_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果 从零 · FVD 852</div></div>'
-     +'<div><video src="videos/scratch_ladder/causal_warm_'+i+'.mp4" loop muted playsinline></video><div class="lab gen">因果+预训练 · FVD 499</div></div></div>'
-     +'<div class="bar"><button>▶ 同步播放</button><span class="chip">同一 clip · 同一初始噪声</span></div>';
-    const vids=d.querySelectorAll('video'),b=d.querySelector('button');
-    b.onclick=()=>{const paused=vids[0].paused;
-      vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
-      b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
-    g.appendChild(d);});});
-document.querySelectorAll('.multi').forEach(g=>{
-  const dom=g.dataset.multi, idx=g.dataset.idx.split(','),
-        cols=g.dataset.cols.split('|').map(c=>{const k=c.split(':');return{lab:k[0],pre:k[1]};}),
-        note=g.dataset.note||'';
-  idx.forEach(i=>{
-    const d=document.createElement('div');d.className='take';
-    let h='<div class="duo" style="grid-template-columns:repeat('+cols.length+',1fr)">';
-    cols.forEach((c,k)=>{
-      h+='<div><video src="videos/'+dom+'/'+c.pre+'_'+i+'.mp4" loop muted playsinline></video>'
-        +'<div class="lab'+(k?' gen':'')+'">'+c.lab+'</div></div>';});
-    h+='</div><div class="bar"><button>▶ 同步播放</button>'
-      +(note?'<span class="chip">'+note+'</span>':'')+'</div>';
-    d.innerHTML=h;
-    const vids=d.querySelectorAll('video'),b=d.querySelector('button');
-    b.onclick=()=>{const paused=vids[0].paused;
-      vids.forEach(v=>{if(paused){v.currentTime=0;v.play();}else v.pause();});
-      b.textContent=paused?'⏸ 暂停':'▶ 同步播放';};
-    g.appendChild(d);});});
-document.querySelectorAll('.grid').forEach(g=>{
-  const dom=g.dataset.dom,ps=(g.dataset.psnr||'').split(','),
-        idx=g.dataset.idx?g.dataset.idx.split(','):
-            Array.from({length:+g.dataset.n},(_,i)=>i);
-  idx.forEach((i,k)=>g.appendChild(makeTake(dom,i,ps[k]||'','')));});
-</script>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">全流程</div><div>
+<h2>模型长什么样，一帧画面怎么被生出来</h2>
+<p>输入是一段真实机器人视频的开头几帧和一整条动作序列（末端位姿 7 维加夹爪）。画面先被一个<strong>冻结的 Wan2.2 VAE</strong> 压进潜空间（空间 16 倍、时间 4 倍），此后所有生成都发生在潜空间里，最后再解码回像素。时间轴被切成<strong>因果块</strong>：一块 = 2 个潜帧 = 8 帧 RGB ≈ 0.53 秒。一个 block-causal DiT 只能看见自己和更早的块，每块配一个动作。去噪走 rectified flow；训练用 diffusion forcing，即同一条样本里不同块带不同噪声水平，这样推理时才允许「前面的块已经干净、后面的块还在去噪」并行推进。推理时维护一个<strong>滚动 KV cache</strong>：保留最早的 sink 帧加最近 W 块，块一旦生成完就提交进 cache，成为后续块的历史。</p>
+
+<svg class="flow" viewBox="0 0 1000 300" role="img" aria-label="NC-World 推理与训练流程框图">
+  <text x="0" y="14" class="lbl">推理（streaming rollout）</text>
+  <rect x="0" y="26" width="126" height="46" rx="6"/><text x="63" y="46" text-anchor="middle">真实开头帧</text><text x="63" y="61" text-anchor="middle" class="lbl">1–5 帧</text>
+  <path d="M126 49 h30" marker-end="url(#a)"/>
+  <rect x="156" y="26" width="118" height="46" rx="6"/><text x="215" y="46" text-anchor="middle">VAE encoder</text><text x="215" y="61" text-anchor="middle" class="lbl">冻结 · 16×/4×</text>
+  <path d="M274 49 h30" marker-end="url(#a)"/>
+  <rect x="304" y="18" width="176" height="62" rx="6" class="hl"/><text x="392" y="40" text-anchor="middle">rolling KV cache</text><text x="392" y="56" text-anchor="middle" class="lbl">sink 帧 + 最近 W 块</text><text x="392" y="70" text-anchor="middle" class="lbl">驱逐后 RoPE 重编号</text>
+  <path d="M480 49 h30" marker-end="url(#a)"/>
+  <rect x="510" y="10" width="196" height="78" rx="6" class="hl"/><text x="608" y="32" text-anchor="middle">block-causal DiT</text><text x="608" y="48" text-anchor="middle" class="lbl">0.12B / 0.5B / 1B / 3B</text><text x="608" y="62" text-anchor="middle" class="lbl">rectified flow 去噪</text><text x="608" y="76" text-anchor="middle" class="lbl">每块一个动作条件</text>
+  <path d="M706 49 h30" marker-end="url(#a)"/>
+  <rect x="736" y="26" width="120" height="46" rx="6"/><text x="796" y="46" text-anchor="middle">下一块潜帧</text><text x="796" y="61" text-anchor="middle" class="lbl">2 潜帧 = 8 RGB</text>
+  <path d="M856 49 h30" marker-end="url(#a)"/>
+  <rect x="886" y="26" width="114" height="46" rx="6"/><text x="943" y="46" text-anchor="middle">VAE decoder</text><text x="943" y="61" text-anchor="middle" class="lbl">→ 画面</text>
+  <path d="M796 72 v26 h-404 v-18" marker-end="url(#a)"/>
+  <text x="600" y="112" text-anchor="middle" class="lbl">提交（commit）：刚生成的块进入 cache，成为下一块的历史 —— 误差从此开始累积</text>
+
+  <line x1="0" y1="140" x2="1000" y2="140" stroke-dasharray="3 4"/>
+  <text x="0" y="164" class="lbl">训练（每条样本随机抽一段窗口）</text>
+  <rect x="0" y="176" width="150" height="52" rx="6"/><text x="75" y="197" text-anchor="middle">DROID 潜帧片段</text><text x="75" y="212" text-anchor="middle" class="lbl">6 / 12 / 32 / 64 潜帧</text>
+  <path d="M150 202 h28" marker-end="url(#a)"/>
+  <rect x="178" y="176" width="172" height="52" rx="6"/><text x="264" y="197" text-anchor="middle">diffusion forcing</text><text x="264" y="212" text-anchor="middle" class="lbl">逐块独立噪声水平</text>
+  <path d="M350 202 h28" marker-end="url(#a)"/>
+  <rect x="378" y="168" width="196" height="68" rx="6" class="hl"/><text x="476" y="189" text-anchor="middle">CHF · committed-history</text><text x="476" y="205" text-anchor="middle" class="lbl">以概率 0.3 把干净历史换成</text><text x="476" y="219" text-anchor="middle" class="lbl">模型自己的一步估计</text>
+  <path d="M574 202 h28" marker-end="url(#a)"/>
+  <rect x="602" y="168" width="180" height="68" rx="6" class="hl"/><text x="692" y="189" text-anchor="middle">SANS · 噪声对齐</text><text x="692" y="205" text-anchor="middle" class="lbl">训练噪声分布对齐</text><text x="692" y="219" text-anchor="middle" class="lbl">推理实际会遇到的那一段</text>
+  <path d="M782 202 h28" marker-end="url(#a)"/>
+  <rect x="810" y="176" width="190" height="52" rx="6"/><text x="905" y="197" text-anchor="middle">Muon 优化器</text><text x="905" y="212" text-anchor="middle" class="lbl">bf16 · EMA 0.9999</text>
+  <text x="0" y="266" class="lbl">课程：21 帧（stage 1a）→ 45 帧（1b）→ 128 帧（2a）→ 253 帧（2b），窗口逐级放大，每级从上一级权重继续</text>
+  <text x="0" y="284" class="lbl">评测：给 1 帧或 2 帧真实开头 + 整条动作，其余 253 帧全部自生成，与真实录像逐帧比 PSNR / SSIM / LPIPS，整段比 FVD</text>
+  <defs><marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="var(--ink-2)" stroke="none"/></marker></defs>
+</svg>
+
+<p class="small dim">两个自研训练机制的动机都来自同一个事实：训练时模型看到的历史是<strong>真值</strong>，推理时看到的历史是<strong>自己生成的</strong>。CHF（committed-history forcing）在训练里就把一部分历史换成模型自己的估计，SANS（schedule-aligned noise sampling）让训练的噪声分布对准推理真正会遇到的那一段。两者合起来在 DROID 81 帧上配对贡献 +1.885 dB、LPIPS −0.0498、FVD −138.9。</p>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">看片</div><div>
+<h2>253 帧自由生成：左边是真实录像，右边是模型</h2>
+<p>只给模型第一帧和整条动作序列，之后 253 帧全部由它自己生成，每一帧都建立在自己上一帧之上。这是最难的设置，也是我们所有头条数字的来源。注意看后半段：物体的位置和手臂的运动仍然跟得住，但纹理逐渐糊化——这正是 FVD 从 56（LIBERO 短片）到 275（DROID 长片）的差距所在。</p>
+<div class="grid g2" style="margin-top:20px">
+  <figure><video src="assets/video/droid253_0000.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0003.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0007.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0011.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0001.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0005.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0009.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+  <figure><video src="assets/video/droid253_0015.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真实录像 · GT</span><span>模型生成 · 253 帧</span></div></figure>
+</div>
+<h3>编解码器天花板：把真值原样过一遍 VAE 再解码</h3>
+<p class="small">任何潜空间世界模型的画质都不可能超过它的编解码器。下面左边是真值，右边是真值走一遍 encode→decode 的往返结果——右边的模糊是 VAE 造成的，不是模型的错。</p>
+<div class="grid g2">
+  <figure><video src="assets/video/ceiling_0000.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>VAE 往返（天花板）</span></div></figure>
+  <figure><video src="assets/video/ceiling_0002.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>VAE 往返（天花板）</span></div></figure>
+</div>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">规模</div><div>
+<h2>3B 没有赢过 1B：一个被预注册判据当场截断的实验</h2>
+<p>我们在同一配方下并行训练了 1B 与 3B 两条链，并预先写下判据：在 40 000 步的同一门控点、同一评测协议下若 3B 不优于 1B，就截断 3B。结果 3B 输了（FVD 234.19 对 192.10，配对 PSNR −0.49 dB），3B 于 2026-09-05 被截断。诚实边界：这个门控点两条链都只看了约 3.9 个 epoch 的唯一数据，属于「重复几乎免费」的区间，所以<strong>不能</strong>把 3B 的落后归因于数据不够；更像是步数与优化超参没按规模重调。下面三联画从左到右是真值、1B、3B（同一片段、同一协议）。</p>
+<div class="grid g2" style="margin-top:18px">
+  <figure><video src="assets/video/gate40k_0000.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
+  <figure><video src="assets/video/gate40k_0002.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
+  <figure><video src="assets/video/gate40k_0004.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
+  <figure><video src="assets/video/gate40k_0006.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
+</div>
+<table class="tbl">
+<thead><tr><th>40k 门控（DROID，24 片 × 21 帧，同协议）</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>FVD ↓</th></tr></thead>
+<tbody>
+<tr class="hi"><td>1B，stage 1a @ 40 000 步</td><td class="num win">28.325</td><td class="num win">0.9181</td><td class="num win">0.0340</td><td class="num win">192.10</td></tr>
+<tr><td>3B，stage 1a @ 40 000 步</td><td class="num">27.839</td><td class="num">0.9166</td><td class="num">0.0354</td><td class="num lose">234.19</td></tr>
+</tbody></table>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">Part I</div><div>
+<h2>已经训练好的世界模型，并不携带被挡住的东西</h2>
+<p>第一步不是造新模型，而是先问现成的模型把状态放在哪。我们在 DROID 上找出所有「物体被机械臂遮住、随后重新露面」的事件（两个 1B 检查点各 632 个），比较模型重现这个物体的误差与一个「从未被遮住」的漂移地板。结论很干脆：只有当物体<strong>没有变化、并且仍然出现在被保留的第一帧里</strong>时，重现才不付代价；一旦它不在保留帧里，或者在遮挡期间动过，误差就显著高出 0.03–0.11。也就是说模型是在<strong>重画</strong>，不是在<strong>记住</strong>。配套的记忆半径探针给出同样的画面：不管缓存开到 4 块还是 6 块，真正被读的只有最开头的 sink 帧和最近一块（半径 = 2）。</p>
+<figure><img src="assets/fig_occlusion.png" alt="遮挡探针：只有物体仍在保留帧中且未变化时才没有额外误差">
+<figcaption>纵轴是「重新露面时比从未被遮住多出来的误差」，0 表示没有代价。误差棒为配对 bootstrap 95% 区间。左右是两个独立的 1B 检查点，结论一致。</figcaption></figure>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">Part II</div><div>
+<h2>揭盖台：把「模型记不记得」变成一个可以逐帧检查的问题</h2>
+<p>真实视频里没有干净的隐状态标签，所以我们造了一个：五个颜色可分辨的货物放在五个杯子下，盖子落下之后，模型只按动作序列生成一次次对换的画面，最后自己生成开盖的画面。<strong>我们不问模型「球在哪」，而是直接用一个颜色解码器去读它生成的开盖帧里每个位置到底是什么颜色。</strong>任务里还有一行永远可见的 A 行，走独立的对换流，用来证明「它会正确渲染这套对换」，把渲染能力和状态追踪分开计量。整排列猜中的概率是 1/120。</p>
+<div class="grid g3" style="margin-top:20px">
+  <figure><img src="assets/rt/s5_dinf.webp" alt="只在末尾揭盖"><figcaption>只在末尾揭盖（d = ∞）：盖住之后连做 8 次对换，最后一次性开盖。</figcaption></figure>
+  <figure><img src="assets/rt/s5_d2.webp" alt="每 2 次对换揭一次盖"><figcaption>每 2 次对换揭一次盖（d = 2）：盲盘的步数变成一个独立于片长的旋钮。</figcaption></figure>
+  <figure><img src="assets/rt/s5_mix.webp" alt="混合揭盖调度"><figcaption>混合揭盖调度：每集随机把 0–4 个对换槽换成揭盖，这是我们最终用的训练分布。</figcaption></figure>
+  <figure><img src="assets/rt/s5_full.webp" alt="全状态指示器"><figcaption>角落指示器把真实状态画在画面上（frames as scratchpad）：像素损失于是直接监督隐状态。</figcaption></figure>
+  <figure><img src="assets/rt/s5_fail.webp" alt="失败换位"><figcaption>失败换位事件：盖子明显卡住又落回，动作说换了、状态其实没换。</figcaption></figure>
+  <figure><img src="assets/rt/z5_dinf.webp" alt="Z5 转台"><figcaption>Z₅ 转台版本：代数复杂度更低的一级，用来分离「难在组合」还是「难在监督缺失」。</figcaption></figure>
+</div>
+<p class="small dim" style="margin-top:14px">以上是任务本身的真值动画（不是模型输出），用来说明规则。</p>
+
+<h3>模型自己生成的开盖画面（左：真值　右：生成）</h3>
+<div class="grid g2">
+  <figure><img src="assets/rt/rt_k8mix_step00030000_Ntrain_dtrain_ep10000000_gt_vs_pred.webp" alt="K8mix 生成对照"><figcaption><strong>K8mix</strong>（训练窗 8 块、混合揭盖）：开盖后五个货物的颜色与真值完全一致。</figcaption></figure>
+  <figure><img src="assets/rt/rt_k2mix_step00030000_Ntrain_dtrain_ep10000000_gt_vs_pred.webp" alt="K2mix 生成对照"><figcaption><strong>K2mix</strong>（训练窗 2 块）：短盲盘时也读得对，但盲盘步数一多就崩。</figcaption></figure>
+  <figure><img src="assets/rt/rt_k2mix_step00030000_Ntrain_d4_ep10000000_gt_vs_pred.webp" alt="K2mix d=4 失败"><figcaption>同一模型在 d = 4（连盘 4 次）：开盖画面里的颜色已经不再对应真实排列——这就是 0.000 的样子。</figcaption></figure>
+  <figure><img src="assets/rt/rt_k8inf_step00030000_Ntrain_dtrain_ep10000000_gt_vs_pred.webp" alt="K8∞ 不掀盖"><figcaption><strong>一个被图片抓出来的坑</strong>：只在末尾揭盖训练时，模型在该揭盖的地方<em>根本不掀盖</em>，把这个稀疏动作执行成了又一次对换。这不是「追踪失败」，是「动作没学会」——只看数字会误判。</figcaption></figure>
+</div>
+
+<h3>盲盘几步之后还读得对</h3>
+<figure><img src="assets/fig_rt_ladder.png" alt="揭盖间隔与读对率">
+<figcaption>横轴是两次揭盖之间必须盲盘的对换次数。灰色虚线是「照抄上一次开盖」的地板，点线是随机猜（1/120）。</figcaption></figure>
+<table class="tbl">
+<thead><tr><th>揭盖台 30 000 步，8 次对换清链，隐藏行整排列读对率</th><th>d=1</th><th>d=2</th><th>d=4</th><th>d=8</th><th>训练分布</th></tr></thead>
+<tbody>
+<tr><td>K8mix　缓存窗 9 块（整集都在 cache 里）</td><td class="num">0.999</td><td class="num">0.832</td><td class="num">0.684</td><td class="num">0.055</td><td class="num">0.820</td></tr>
+<tr><td>K2mix　缓存窗 2 块</td><td class="num">0.969</td><td class="num">0.648</td><td class="num lose">0.000</td><td class="num">0.016</td><td class="num">0.571</td></tr>
+<tr class="hi"><td>K2INT　缓存窗 2 块 + clean/noisy 交错训练布局</td><td class="num win">1.000</td><td class="num win">1.000</td><td class="num win">1.000</td><td class="num">0.047</td><td class="num win">0.913</td></tr>
+<tr><td>I5-off　缓存窗 2 块，无画面指示器</td><td class="num">0.986</td><td class="num">0.926</td><td class="num">0.898</td><td class="num">0.891</td><td class="num">0.954</td></tr>
+<tr><td class="dim">地板：照抄上一次开盖</td><td class="num dim">0.008</td><td class="num dim">0.098</td><td class="num dim">0.016</td><td class="num dim">0.016</td><td class="num dim">0.306</td></tr>
+<tr><td class="dim">随机猜</td><td class="num dim" colspan="5">0.008（1/120）</td></tr>
+</tbody></table>
+<div class="note"><strong>本项目最强的一条正结果</strong>：K2INT 原本只是快权重子层臂的「无子层对照」，却在 2 块的小缓存窗下把盲盘能力从「2 步即崩」推到「4 步仍 100%」，并且把 8 次对换的链外推到 32 次对换仍读对（N=32、d=2 时 1.000，对照 K2mix 只有 0.292）。也就是说，买到盲盘组合能力的不是新的记忆模块，而是<strong>训练布局</strong>本身。</div>
+<h3>状态到底存在哪个载体里</h3>
+<figure><img src="assets/fig_carrier.png" alt="载体线性探针">
+<figcaption>用线性探针直接从模型内部特征解码隐藏排列。KV cache 里确实有信号（0.52–0.54，打乱对照 0.18），而额外加的记忆槽（M1/M2）停在机会水平（0.22 对 0.20）——稀疏监督下那个可写载体里什么也没写进去。</figcaption></figure>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">Part II-TTT</div><div>
+<h2>测试时训练：能买到的是「部署机制校准」，不是记忆</h2>
+<p>测试时训练（test-time training）在这里有两副面孔。一副是<strong>过程</strong>：评测时拿测试片自己可得的像素，对一小组 LoRA 参数做几十步内循环，然后再生成。另一副是<strong>子层</strong>：在模型内部塞一个快权重模块，让它在生成过程中被写入。我们把两副面孔分别打到底，得到的是一组干净但反直觉的结论。</p>
+<p>开环（模型完全吃自己生成的历史）下过程 TTT <strong>无分可赚</strong>：拿上下文帧适配、拿别人的帧适配（placebo）、拿自生成帧适配，三条路的 PSNR 变化都在噪声内，而 LPIPS 与 FVD 反而变差。唯一抬分的是作弊臂：把 16 帧<strong>真值未来</strong>喂进内循环，PSNR +1.553 dB（24/24 片）——这证明权重<em>有能力</em>把真实信息带过整段 rollout，只是测试时拿不到那份信息。</p>
+<p>换到<strong>流式观测协议</strong>（真实帧持续到达、缓存里始终是真帧，这是真实部署的样子）故事就变了：一次性用 16 个训练片段的开头做 32 步校准，冻结之后评所有测试片，<strong>+1.60 dB [+1.34, +1.89]，24/24 片，FVD 477 → 407，零测试时代价</strong>。但机制不是记忆：用别人的帧做同样的校准也能拿到 +0.46 dB，说明它主要是把模型从「习惯了自生成历史」的状态<strong>校回到「历史是真帧」的状态</strong>。</p>
+<figure><img src="assets/fig_regime_2x2.png" alt="机制位 2×2">
+<figcaption>把同一套校准分别推向「历史是观测」和「历史是自生成」两个方向。往观测方向校，流式协议 +1.60 dB；往自生成方向校，流式协议 −1.53 dB，正好是镜像。而开环侧无论往哪边推都约等于零——模型早已被 CHF 训练钉在开环那一端，那一侧已经饱和。</figcaption></figure>
+<figure><img src="assets/fig_calibration_curve.png" alt="校准增益随基线强度收缩">
+<figcaption>七个检查点上的同一套校准：模型越强，能校回来的错配越少。诚实边界：这是「固定 32 步预算」下的陈述，1B 上把预算加到 64 步能到 +0.56 dB / FVD 130，再加就开始压平画面。</figcaption></figure>
+<figure><img src="assets/fig_horizon.png" alt="增益随视界的分布">
+<figcaption>增益不在开头，而在中后段持续存在——与「校准修的是历史怎么被使用」一致。</figcaption></figure>
+<table class="tbl">
+<thead><tr><th>过程 TTT（DROID，24 片配对，同协议）</th><th>PSNR</th><th>SSIM</th><th>LPIPS</th><th>FVD</th><th>判读</th></tr></thead>
+<tbody>
+<tr><td>开环基线（无 TTT）</td><td class="num">19.922</td><td class="num">0.7864</td><td class="num">0.1315</td><td class="num">280.9</td><td class="dim">—</td></tr>
+<tr><td>开环 + 上下文帧适配 32 步</td><td class="num">19.916</td><td class="num">0.7922</td><td class="num lose">0.1366</td><td class="num lose">362.4</td><td class="lose">无效</td></tr>
+<tr><td>开环 + 自生成帧适配 32 步</td><td class="num">19.890</td><td class="num">0.7855</td><td class="num lose">0.1361</td><td class="num lose">376.0</td><td class="lose">有害</td></tr>
+<tr><td>开环 + 真值未来 16 帧（作弊上界）</td><td class="num win">21.475</td><td class="num win">0.8124</td><td class="num win">0.1112</td><td class="num">282.4</td><td class="win">+1.553 dB</td></tr>
+<tr><td>流式观测基线（无 TTT）</td><td class="num">23.426</td><td class="num">0.8566</td><td class="num">0.0681</td><td class="num">476.7</td><td class="dim">—</td></tr>
+<tr class="hi"><td>流式 + 一次性校准 32 步（零测试时代价）</td><td class="num win">25.026</td><td class="num win">0.8699</td><td class="num win">0.0578</td><td class="num win">406.7</td><td class="win">+1.60 dB，24/24</td></tr>
+<tr><td>流式 + 逐片在线适配（48 片表）</td><td class="num">24.044</td><td class="num">0.8661</td><td class="num">0.0651</td><td class="num">426.4</td><td class="win">+0.49 dB，47/48</td></tr>
+<tr><td class="dim">同上的 placebo 对照（别人的帧）</td><td class="num dim">23.814</td><td class="num dim">0.8640</td><td class="num dim">0.0672</td><td class="num dim">467.2</td><td class="dim">+0.26 dB</td></tr>
+</tbody></table>
+<div class="note">48 片的对照把在线适配的增益拆成两半：约一半是与场景无关的<strong>校准</strong>（placebo 也能拿到），另一半 +0.23 dB [+0.11, +0.36] 才是<strong>本片观测内容被写进权重</strong>，而且不依赖开头的锚帧。这是全项目唯一一处「权重当作缓存之外的记忆」成立的证据，量级也就 0.2 dB。</div>
+<div class="note warn"><strong>负结果照登</strong>：把快权重子层插进已经收敛的 DROID 模型再微调 6000 步，门始终打不开（|gate| 中位 4.3e-4，把门置零后逐位相同），而缩窗的代价确实存在（对照臂每 1000 步多付 0.004–0.020 的 loss）。判读是<strong>零初始化的门在微调下无法自举</strong>，不是「子层没用」。修复方案（门初值 0.1 + 真正生效的学习率倍率）已实现并提交，随项目暂停未及跑完。顺带查出一个真 bug：训练循环每步按优化器类型重算各组学习率，把配置里的 mixer 学习率倍率在第 1 步就抹掉了，已修并加回归测试。</div>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">跑分</div><div>
+<h2>公开协议上的绝对分</h2>
+<p>原论文路线的一个方法学弱点是所有结果都是相对值（用一个自定义且未公开的双向 baseline 归一化为 1.0）。我们的头条因此全部是<strong>绝对数</strong>，并在别人发表过的协议上与别人发表过的数字直接对齐。</p>
+<figure><img src="assets/fig_bench_fvd.png" alt="公开协议 FVD 对比">
+<figcaption>IRASim 协议下的 FVD（越低越好）。RT-1 一格我们是输的，照登。</figcaption></figure>
+<table class="tbl">
+<thead><tr><th>协议</th><th>指标</th><th>NC-World</th><th>对手</th><th></th></tr></thead>
+<tbody>
+<tr class="hi"><td>Bridge-V2，IRASim 协议（8 帧 × 512 片）</td><td>FVD ↓</td><td class="num win">45.08</td><td class="num">IRASim 91.60 · DriftWorld 101.20</td><td class="win">赢</td></tr>
+<tr class="hi"><td>Language-Table，IRASim 协议</td><td>FVD ↓</td><td class="num win">37.97</td><td class="num">IRASim 60.05 · DriftWorld 39.09</td><td class="win">赢</td></tr>
+<tr class="hi"><td>RT-1，NanoWM 3 帧协议</td><td>PSNR / SSIM / LPIPS</td><td class="num win">29.787 / 0.912 / 0.0367</td><td class="num">NanoWM-B/2　24.36 / 0.787 / 0.180</td><td class="win">赢</td></tr>
+<tr><td>RT-1，IRASim 协议</td><td>FVD ↓</td><td class="num lose">79.47</td><td class="num">DriftWorld 68.72</td><td class="lose">输</td></tr>
+<tr><td>RT-1，IRASim 15 帧协议</td><td>PSNR / SSIM</td><td class="num">25.426 / 0.8592</td><td class="num">IRASim 26.048 / 0.833</td><td class="lose">PSNR 输、SSIM 赢</td></tr>
+</tbody></table>
+<h3>展示协议下的逐域绝对值（24 片，自由生成）</h3>
+<table class="tbl">
+<thead><tr><th>域</th><th>帧数</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>FVD ↓</th></tr></thead>
+<tbody>
+<tr><td>LIBERO</td><td class="num">49</td><td class="num">33.99</td><td class="num">0.9697</td><td class="num">0.0190</td><td class="num">56.5</td></tr>
+<tr><td>Language-Table</td><td class="num">41</td><td class="num">28.26</td><td class="num">0.9047</td><td class="num">0.0425</td><td class="num">168.0</td></tr>
+<tr><td>Bridge-V2</td><td class="num">77</td><td class="num">22.58</td><td class="num">0.8547</td><td class="num">0.0748</td><td class="num">251.7</td></tr>
+<tr class="hi"><td>DROID（主战场，0.5B）</td><td class="num">253</td><td class="num">19.71</td><td class="num">0.7827</td><td class="num">0.1337</td><td class="num">274.85</td></tr>
+<tr class="hi"><td>DROID（主战场，1B）</td><td class="num">253</td><td class="num">22.79</td><td class="num">0.8330</td><td class="num">0.0829</td><td class="num">155.8</td></tr>
+</tbody></table>
+<h3>几个决定了配方的对照</h3>
+<table class="tbl">
+<thead><tr><th>对照</th><th>结果</th></tr></thead>
+<tbody>
+<tr><td>注意力结构：双向骨干后训练因果化 vs 块状因果从零训练</td><td class="num">FVD 4454.4 → 690.8，LPIPS 0.555 → 0.077（好 6.4× / 7.2×）</td></tr>
+<tr><td>CHF + SANS 的配对贡献（DROID 81 帧）</td><td class="num">+1.885 dB（t = 5.92），LPIPS −0.0498，FVD −138.9</td></tr>
+<tr><td>真值历史 vs 自由生成（同一模型）</td><td class="num">81 帧 31.3 → 21.5 dB；253 帧 ≈33 → 19.1 dB</td></tr>
+<tr><td>记忆半径探针（缓存开 4 或 6 块）</td><td class="num">真正被读的半径 = 2（sink + 最近一块），LIBERO 为 3</td></tr>
+<tr><td>揭盖台颜色解码器天花板</td><td class="num">隐藏行 / 可见行整排列读对率 1.000 / 1.000</td></tr>
+</tbody></table>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">数据</div><div>
+<h2>训练数据与设置</h2>
+<p>语料是 DROID 真机机器人视频的 LeRobot 版本：<strong>57 774 集、14 748 517 帧、15 Hz、共 273 小时</strong>，画面统一到 240×320，动作是末端笛卡尔位姿加夹爪开合，逐通道按语料统计标准化。主链只用一路外部相机；另外两路（第二外部机位与腕部）在 2026-09-06 补齐并逐文件做了 sha256 对 LFS 校验，<strong>三个视角各 57 774 个文件全部通过</strong>，为「唯一数据翻倍」的对照臂备好了料。课程分四级，窗口从 21 帧涨到 253 帧，每级从上一级权重继续；优化器 Muon（配置学习率 ×20 给二维隐层权重），bf16，EMA 0.9999，全局 batch 从 64 降到 16 以换更长窗口。</p>
+<p class="small dim">按帧数算，整条 1B 链累计采样约 3.45 亿帧 ≈ 25 个 epoch；换算成 token 约 1.1 B 唯一 token 重复到 28 B。3B 若按算力最优需要约 60 B token，也就是把同一语料重复 50 遍以上——这是「先扩唯一数据再谈 3B」的依据，但它是<strong>前瞻推断</strong>，不是 40k 门控检验过的结论。</p>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="rail"><div class="side">状态</div><div>
+<h2>现在项目在做什么</h2>
+<p>2026-09-07 起本项目<strong>已保存并暂停</strong>，训练 GPU 让给了实验室的新项目，队列中没有任何本项目作业，全部会自动提交作业的守护进程都已停止。暂停时正在跑或刚排上队的实验有六项：训练侧机制条件化臂（在训练时告诉模型「这段历史是观测还是自生成」，预期把上面那 +0.4 至 +1.6 dB 的错配在训练侧直接消掉）、修好门初值的快权重回写 v3、两条数据充分性对照臂（第二视角翻倍 / 只用一半集数）、一条从零训练的半语料链（这是「数据是不是瓶颈」的唯一干净检验），以及揭盖台上剩下的四条载体臂。恢复账本连同每个实验的原始提交命令、预注册判据与一个已定位待修的缓存竞态都写在仓库的暂停文档里。</p>
+</div></div>
+</div></section>
+
+<footer><div class="wrap">
+<p style="max-width:70ch">同一仓库里的其他页面：<a href="revealtable.html">揭盖台任务与 rollout 画廊</a> · <a href="quantitative_results.html">定量结果表</a> · <a href="archive_index_2026-09-04.html">2026-09-04 版总览页（存档）</a></p>
+<p>NC-World · 阶段性公开页 · 数据与图表全部来自项目 <code>results/</code> 下的原始 JSON 与逐片配对文件。页面上的每一个数字都是绝对值，负结果与失败实验一并列出。</p>
+</div></footer>
+
 </body>
 </html>
