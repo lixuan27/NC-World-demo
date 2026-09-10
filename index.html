@@ -321,6 +321,28 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 </div></section>
 
 <section><div class="wrap">
+<div class="rail"><div class="side">附图</div><div>
+<h2>逐臂的完整读数图</h2>
+<p>下面是四条揭盖台臂各自的两张原始图：一张是 (揭盖间隔 d × 缓存窗口 W) 的二维阶梯，一张是随生成推进的逐块读对率曲线。它们是上面那张汇总图的原始出处。</p>
+<div class="grid g4" style="margin-top:18px">
+  <figure><img src="assets/fig/part2_k8mix_dW.png" alt="K8mix 阶梯"><figcaption>K8mix · (d, W) 阶梯</figcaption></figure>
+  <figure><img src="assets/fig/part2_k8mix_acc_t.png" alt="K8mix 逐块曲线"><figcaption>K8mix · 逐块读对率</figcaption></figure>
+  <figure><img src="assets/fig/part2_k2mix_dW.png" alt="K2mix 阶梯"><figcaption>K2mix · (d, W) 阶梯</figcaption></figure>
+  <figure><img src="assets/fig/part2_k2mix_acc_t.png" alt="K2mix 逐块曲线"><figcaption>K2mix · 逐块读对率</figcaption></figure>
+  <figure><img src="assets/fig/part2_k2int_mix_dW.png" alt="K2INT 阶梯"><figcaption>K2INT · (d, W) 阶梯</figcaption></figure>
+  <figure><img src="assets/fig/part2_k2int_mix_acc_t.png" alt="K2INT 逐块曲线"><figcaption>K2INT · 逐块读对率</figcaption></figure>
+  <figure><img src="assets/fig/part2_i5off_mix_dW.png" alt="I5-off 阶梯"><figcaption>I5-off · (d, W) 阶梯</figcaption></figure>
+  <figure><img src="assets/fig/part2_i5off_mix_acc_t.png" alt="I5-off 逐块曲线"><figcaption>I5-off · 逐块读对率</figcaption></figure>
+</div>
+<div class="grid g2" style="margin-top:18px">
+  <figure><img src="assets/rt/rt_k8mix_step00030000_Ntrain_dtrain_reveals.png" alt="K8mix 揭盖帧"><figcaption>K8mix 六集的开盖帧逐格对照（真值在上、生成在下）：五集读数与真值完全一致。</figcaption></figure>
+  <figure><img src="assets/rt/rt_k8inf_step00030000_Ntrain_d1_reveals.png" alt="K8无穷 不掀盖"><figcaption>只在末尾揭盖训练的臂：本该掀盖的地方渲染成两个盖子互换的糊影——动作没学会，不是追踪失败。</figcaption></figure>
+</div>
+<figure><img src="assets/fig/part1_occlusion.png" alt="遮挡探针原始分层图"><figcaption>遮挡探针的原始分层图（内部记号）：<code>k&lt;=W</code> 表示事件仍在缓存窗内，<code>sink_eq</code> 表示被遮内容仍出现在保留的首帧里。</figcaption></figure>
+</div></div>
+</div></section>
+
+<section><div class="wrap">
 <div class="rail"><div class="side">状态</div><div>
 <h2>现在项目在做什么</h2>
 <p>2026-09-07 起本项目<strong>已保存并暂停</strong>，训练 GPU 让给了实验室的新项目，队列中没有任何本项目作业，全部会自动提交作业的守护进程都已停止。暂停时正在跑或刚排上队的实验有六项：训练侧机制条件化臂（在训练时告诉模型「这段历史是观测还是自生成」，预期把上面那 +0.4 至 +1.6 dB 的错配在训练侧直接消掉）、修好门初值的快权重回写 v3、两条数据充分性对照臂（第二视角翻倍 / 只用一半集数）、一条从零训练的半语料链（这是「数据是不是瓶颈」的唯一干净检验），以及揭盖台上剩下的四条载体臂。恢复账本连同每个实验的原始提交命令、预注册判据与一个已定位待修的缓存竞态都写在仓库的暂停文档里。</p>
