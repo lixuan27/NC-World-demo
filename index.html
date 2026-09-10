@@ -80,7 +80,7 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 
 <header>
 <div class="wrap">
-  <p class="eyebrow">Native causal video world model · 阶段公开页 · 2026-09-10</p>
+  <p class="eyebrow">Native causal video world model · 阶段公开页 · 2026-09-11 更新</p>
   <h1>被杯子盖住的球，模型到底记住了没有
     <span class="sub">NC-World：一个完全从零训练的 action-conditioned block-causal video world model，以及一套直接从它生成的画面里读出「看不见的状态」的量尺</span>
   </h1>
@@ -89,7 +89,7 @@ svg.flow{width:100%;height:auto;margin-top:22px}
     <span class="pill">DROID 273 h · 57 774 集 · 三视角已校验</span>
     <span class="pill">0.5B / 1B / 3B 从零训练</span>
     <span class="pill">全部读数为绝对值，非归一化</span>
-    <span class="pill">项目状态：2026-09-07 起暂停（资源让给新项目）</span>
+    <span class="pill">项目状态：2026-09-11 起恢复推进，论文截稿 2026-09-20</span>
   </div>
   <div class="strip" aria-hidden="true">
     <span style="background:var(--c1)"></span><span style="background:var(--c2)"></span><span style="background:var(--c3)"></span><span style="background:var(--c4)"></span><span style="background:var(--c5)"></span>
@@ -241,7 +241,7 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 <div class="note"><strong>本项目最强的一条正结果</strong>：K2INT 原本只是快权重子层臂的「无子层对照」，却在 2 块的小缓存窗下把盲盘能力从「2 步即崩」推到「4 步仍 100%」，并且把 8 次对换的链外推到 32 次对换仍读对（N=32、d=2 时 1.000，对照 K2mix 只有 0.292）。也就是说，买到盲盘组合能力的不是新的记忆模块，而是<strong>训练布局</strong>本身。</div>
 <h3>状态到底存在哪个载体里</h3>
 <figure><img src="assets/fig_carrier.png" alt="载体线性探针">
-<figcaption>用线性探针直接从模型内部特征解码隐藏排列。KV cache 里确实有信号（0.52–0.54，打乱对照 0.18），而额外加的记忆槽（M1/M2）停在机会水平（0.22 对 0.20）——稀疏监督下那个可写载体里什么也没写进去。</figcaption></figure>
+<figcaption>用线性探针直接从模型内部特征解码隐藏排列。图中的 0.52–0.54 是<strong>第 0 块</strong>（初始排列刚刚可见）的读数；从第 1 块起，三条臂的探针都落到 0.20–0.32 对打乱对照 0.17–0.23 的近机会水平，而且追踪完全正确的 K2INT 与完全失败的 K2mix 曲线几乎重合——也就是说线性探针<strong>找不到</strong>被携带的状态，即便在追踪成功的臂里也找不到；额外加的记忆槽（M1/M2）同样停在机会水平（0.22 对 0.20）。这把「状态住在哪个载体里」的答案从「KV」收窄为「不是线性可读的 KV 方向，也不是记忆槽」（2026-09-11 更正）。</figcaption></figure>
 </div></div>
 </div></section>
 
