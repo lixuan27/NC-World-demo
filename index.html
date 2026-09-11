@@ -89,7 +89,8 @@ svg.flow{width:100%;height:auto;margin-top:22px}
     <span class="pill">DROID 273 h · 57 774 集 · 三视角已校验</span>
     <span class="pill">0.5B / 1B / 3B 从零训练</span>
     <span class="pill">全部读数为绝对值，非归一化</span>
-    <span class="pill">项目状态：2026-09-11 起恢复推进，论文截稿 2026-09-20</span>
+    <span class="pill">项目状态：2026-09-11 起恢复推进，论文截稿 2026-09-22</span>
+    <span class="pill">头条口径：120 片 spread · 253 帧 · TF32 · effective_steps 12</span>
   </div>
   <div class="strip" aria-hidden="true">
     <span style="background:var(--c1)"></span><span style="background:var(--c2)"></span><span style="background:var(--c3)"></span><span style="background:var(--c4)"></span><span style="background:var(--c5)"></span>
@@ -102,8 +103,8 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 <h2>问题、做法、结论</h2>
 <p>我们从零训练一个「给定过去画面 + 接下来要执行的动作 → 逐块生成后续画面」的因果视频模型，然后用两把尺子量它：一把是真实机器人视频上的<strong>绝对画质与长时程漂移</strong>，另一把是自建的揭盖台任务，直接检查它生成的开盖画面里<strong>货物是不是真的在正确的杯子下面</strong>。三条主要结论：现成的机器人世界模型<strong>不携带</strong>被遮挡的内容，它靠保留的第一帧重画；把训练时的「揭盖」监督加密，并把训练布局换成 clean/noisy 交错，KV cache 第一次能盲盘 4 次对换仍 100% 读对；而测试时训练在这个体系里能买到的东西是<strong>部署机制校准</strong>，不是记忆。</p>
 <div class="kpi">
-  <div class="card"><span class="n">19.71<span class="dim" style="font-size:14px"> dB</span></span><span class="l">DROID 253 帧自由生成的绝对 PSNR（0.5B），FVD 274.85</span></div>
-  <div class="card"><span class="n">22.79<span class="dim" style="font-size:14px"> dB</span></span><span class="l">同协议 1B 的绝对 PSNR，FVD 155.8</span></div>
+  <div class="card"><span class="n">19.41<span class="dim" style="font-size:14px"> dB</span></span><span class="l">DROID 253 帧自由生成的绝对 PSNR（0.5B，120 片 spread），FVD 154.0；换噪声种子 ±0.05 dB</span></div>
+  <div class="card"><span class="n">22.52<span class="dim" style="font-size:14px"> dB</span></span><span class="l">同协议 1B 的绝对 PSNR，FVD 88.7；C1+C2 在同一部署采样器下 +2.58 dB（24/24 片）</span></div>
   <div class="card"><span class="n">1.000</span><span class="l">揭盖台盲盘 4 次对换后整排列读对率（K2INT，窗口 2 块）</span></div>
   <div class="card"><span class="n">+1.60<span class="dim" style="font-size:14px"> dB</span></span><span class="l">流式部署下一次性校准的增益（0.5B，24/24 片）</span></div>
   <div class="card"><span class="n">45.08</span><span class="l">Bridge-V2 IRASim 协议 FVD，对手 91.60 / 101.20</span></div>
@@ -177,8 +178,8 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 
 <section><div class="wrap">
 <div class="rail"><div class="side">规模</div><div>
-<h2>3B 没有赢过 1B：一个被预注册判据当场截断的实验</h2>
-<p>我们在同一配方下并行训练了 1B 与 3B 两条链，并预先写下判据：在 40 000 步的同一门控点、同一评测协议下若 3B 不优于 1B，就截断 3B。结果 3B 输了（FVD 234.19 对 192.10，配对 PSNR −0.49 dB），3B 于 2026-09-05 被截断。诚实边界：这个门控点两条链都只看了约 3.9 个 epoch 的唯一数据，属于「重复几乎免费」的区间，所以<strong>不能</strong>把 3B 的落后归因于数据不够；更像是步数与优化超参没按规模重调。下面三联画从左到右是真值、1B、3B（同一片段、同一协议）。</p>
+<h2>3B 与 1B：阶段末反号、阶段初领先——一条按步数匹配读的曲线</h2>
+<p>我们在同一配方下并行训练了 1B 与 3B 两条链。stage 1a 终点（40 000 步）同一门控下 3B 落后（FVD 234.19 对 192.10，配对 PSNR −0.49 dB [−0.99, +0.01]，7/17 片，<strong>区间含 0</strong>），3B 一度被截断。2026-09-10 起恢复为「有界续跑 + 步数匹配」：进入 stage 1b 后按同步数配对，3B 在 3k / 5k / 7k 步分别领先 +0.58 [+0.18, +1.05]、+0.42 [−0.10, +0.86]、+0.93 [+0.55, +1.26] dB，SSIM/LPIPS 三点区间全不含 0。把 7k 的两臂放回 40k 门控用的粗采样器（cache 2 / eff 4）3B 仍领先 +0.57 [+0.13, +0.97] dB，所以阶段末的反号不是采样器差异，而是阶段位置；10k / 15k 门控在跑。诚实边界：全部单种子、24 片门控片、不在 253 帧头条协议上。下面三联画从左到右是真值、1B、3B（同一片段、同一协议）。</p>
 <div class="grid g2" style="margin-top:18px">
   <figure><video src="assets/video/gate40k_0000.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
   <figure><video src="assets/video/gate40k_0002.mp4" autoplay muted loop playsinline></video><div class="vcap"><span>真值</span><span>1B</span><span>3B</span></div></figure>
@@ -190,6 +191,10 @@ svg.flow{width:100%;height:auto;margin-top:22px}
 <tbody>
 <tr class="hi"><td>1B，stage 1a @ 40 000 步</td><td class="num win">28.325</td><td class="num win">0.9181</td><td class="num win">0.0340</td><td class="num win">192.10</td></tr>
 <tr><td>3B，stage 1a @ 40 000 步</td><td class="num">27.839</td><td class="num">0.9166</td><td class="num">0.0354</td><td class="num lose">234.19</td></tr>
+<tr><td>1B，stage 1b @ 7 000 步（cache 3 / eff 64）</td><td class="num">26.287</td><td class="num">—</td><td class="num">—</td><td class="num">267.46</td></tr>
+<tr class="hi"><td>3B，stage 1b @ 7 000 步（同采样器）</td><td class="num win">27.214</td><td class="num win">Δ +0.0163 [24/0]</td><td class="num win">Δ −0.0099 [0/24]</td><td class="num win">221.97</td></tr>
+<tr><td>1B，stage 1b @ 7 000 步（粗采样器 cache 2 / eff 4）</td><td class="num">27.533</td><td class="num">0.9100</td><td class="num">0.0392</td><td class="num">232.28</td></tr>
+<tr class="hi"><td>3B，stage 1b @ 7 000 步（同粗采样器）</td><td class="num win">28.103</td><td class="num win">0.9167</td><td class="num win">0.0346</td><td class="num win">197.62</td></tr>
 </tbody></table>
 </div></div>
 </div></section>
